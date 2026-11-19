@@ -11,7 +11,9 @@ macOS 文件管理器，访达（Finder）替代品。基于 Tauri 2，Rust 后�
 - 显示 / 隐藏隐藏文件（设置持久化到 localStorage）
 
 ### 文件操作
-- 新建文件 / 文件夹、重命名（⌘D / F2）、删除（带确认弹窗，目录会提示递归删除）
+- 新建文件 / 文件夹、重命名（⌘D / F2）
+- **删除移入废纸篓**（带确认弹窗），侧栏可浏览废纸篓、右键清空
+- **压缩为 ZIP / 解压**（右键菜单，系统 zip/unzip，解压前查同名冲突与路径穿越）
 - 复制（⌘C）/ 剪切（⌘X）/ 粘贴（⌘V），目录递归复制
 - 右键菜单：打开、在终端中打开（Terminal.app）、复制路径 / 文件名、计算目录大小
 - 复制路径 / 错误信息后按钮上显示"已复制"回执（toast + 按钮变色）
@@ -51,7 +53,11 @@ mfile/
 | `create_dir` / `create_file` / `rename` | 基础操作 |
 | `move_entries(items, dest)` | 移动（同盘 rename） |
 | `copy_entries(items, dest)` | 递归复制 |
-| `delete_entries(items)` | 删除（目录用 `remove_dir_all`） |
+| `delete_entries(items)` | 删除（目录用 `remove_dir_all`，UI 已不再调用） |
+| `trash_entries(items)` | **移入废纸篓**（trash crate → `~/.Trash`） |
+| `trash_dir()` / `empty_trash()` | 废纸篓路径 / 清空废纸篓 |
+| `zip_entries(items, dest_zip)` | 压缩为 zip（系统 zip 命令，递归保留结构） |
+| `unzip_here(zip_path, dest_dir)` | 解压（系统 unzip，先检查同名冲突 + 拒绝 `../` 路径穿越） |
 | `dir_size(path)` | 递归计算目录大小 |
 | `search_files(root, query, max_results)` | 深度搜索，10s 超时上限 |
 | `open_path(path)` | 用系统 `open` 打开 |

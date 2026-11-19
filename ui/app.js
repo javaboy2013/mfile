@@ -51,6 +51,7 @@ const SVG = {
   movie: '<svg viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" fill="#d65c8c"/><path d="M10 9.5v5l4.5-2.5L10 9.5z" fill="#fff"/></svg>',
   desktop: '<svg viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="13" rx="2" fill="#5aa2f0"/><rect x="4" y="6" width="16" height="9" fill="#a7ccf2"/><path d="M9 20h6M12 17v3" stroke="#8f8f98" stroke-width="2" stroke-linecap="round"/></svg>',
   root: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" fill="#8f8f98"/><circle cx="12" cy="12" r="6" fill="#c5c5cc"/><circle cx="12" cy="12" r="1.5" fill="#6e6e78"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14l-1.2 13a1.5 1.5 0 0 1-1.5 1.35H7.7A1.5 1.5 0 0 1 6.2 20L5 7z" fill="#9aa3ad"/><rect x="4" y="4" width="16" height="2.5" rx="1.25" fill="#7c8794"/><rect x="9" y="2" width="6" height="3" rx="1" fill="#7c8794"/><path d="M10 10.5v7M14 10.5v7" stroke="#e8eaee" stroke-width="1.6" stroke-linecap="round"/></svg>',
 };
 
 function iconFor(e) {
@@ -223,6 +224,7 @@ const SIDEBAR = [
   { icon: SVG.movie, label: '影片', get path() { return `${state.home || ''}/Movies`; } },
   { icon: SVG.desktop, label: '桌面', get path() { return `${state.home || ''}/Desktop`; } },
   { icon: SVG.root, label: '根目录', path: '/' },
+  { icon: SVG.trash, label: '废纸篓', get path() { return `${state.home || ''}/.Trash`; } },
 ];
 
 function renderSidebar() {
@@ -423,14 +425,57 @@ async function deleteSelected() {
   let msg;
   if (paths.length === 1) {
     const name = paths[0].split('/').pop();
-    msg = dirs.length ? `文件夹「${name}」及其全部内容将被永久删除（不可恢复）` : `文件「${name}」将被永久删除（不可恢复）`;
+    msg = dirs.length ? `文件夹「${name}」及其全部内容将移到废纸篓` : `文件「${name}」将移到废纸篓`;
   } else {
-    msg = `将永久删除 ${paths.length} 个项目${dirs.length ? `（含 ${dirs.length} 个文件夹及其内容）` : ''}（不可恢复）`;
+    msg = `将 ${paths.length} 个项目移到废纸篓${dirs.length ? `（含 ${dirs.length} 个文件夹及其内容）` : ''}`;
   }
-  showConfirm('确认删除', msg, async () => {
-    await invoke('delete_entries', { items: paths });
+  showConfirm('移到废纸篓', msg, async () => {
+    await invoke('trash_entries', { items: paths });
     await refresh();
-    toast(`已删除 ${paths.length} 项`);
+    toast(`已移到废纸篓 ${paths.length} 项`);
+  });
+}
+
+// ---------- 压缩 / 解压 ----------
+
+async function zipSelected() {
+  const paths = selectedPaths();
+  if (!paths.length) return toast('请先选择项目', true);
+  // 压缩包名：单选取主名，多选取父目录名+"归档"
+  let zipName;
+  if (paths.length === 1) {
+    const n = paths[0].split('/').pop();
+    zipName = n.replace(/\.zip$/i, '') + '.zip';
+  } else {
+    zipName = '归档.zip';
+  }
+  const destZip = `${state.cwd}/${zipName}`;
+  try {
+    await invoke('zip_entries', { items: paths, destZip });
+    await refresh();
+    toast(`已压缩为 ${zipName}`);
+  } catch (e) {
+    toast(String(e), true);
+  }
+}
+
+async function unzipToHere(zipPath) {
+  try {
+    await invoke('unzip_here', { zipPath, destDir: state.cwd });
+    await refresh();
+    toast('解压完成');
+  } catch (e) {
+    toast(String(e), true);
+  }
+}
+
+// ---------- 废纸篓 ----------
+
+async function emptyTrashConfirm() {
+  showConfirm('清空废纸篓', '将永久删除废纸篓中的全部项目（不可恢复）', async () => {
+    await invoke('empty_trash');
+    await refresh();
+    toast('废纸篓已清空');
   });
 }
 
@@ -632,10 +677,22 @@ function showCtxMenu(ev, entry) {
     items.push({ label: '删除', danger: true, fn: deleteSelected });
     items.push({ label: '复制', fn: copySelected });
     items.push({ label: '剪切', fn: cutSelected });
+    items.push({ label: '压缩为 ZIP', fn: zipSelected });
+    // 唯一选中且是 .zip 时提供解压
+    if (state.selected.size === 1) {
+      const only = state.entries.find((x) => x.path === [...state.selected][0]);
+      if (only && !only.is_dir && only.ext === 'zip') {
+        items.push({ label: '解压到当前目录', fn: () => unzipToHere(only.path) });
+      }
+    }
   }
   items.push({ label: '在终端中打开', fn: openTerminalHere });
   items.push({ label: '新建文件夹', fn: newFolder });
   items.push({ label: '新建文件', fn: newFile });
+  // 在废纸篓目录时提供清空
+  if (state.cwd && state.cwd.endsWith('/.Trash')) {
+    items.push({ label: '清空废纸篓', danger: true, fn: emptyTrashConfirm });
+  }
   menu.innerHTML = items
     .map((it, i) => `<div class="ctx-item${it.danger ? ' danger' : ''}" data-i="${i}" style="padding:6px 14px;cursor:pointer;font-size:12px;${it.danger ? 'color:var(--danger)' : ''}">${it.label}</div>`)
     .join('');
