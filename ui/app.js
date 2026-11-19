@@ -834,10 +834,46 @@ document.addEventListener('keydown', (ev) => {
 });
 
 // ---------- 启动 ----------
+// Splash：首帧注入已保存主题变量，避免非默认主题用户看到闪屏
+(function themePrefill() {
+  const t = localStorage.getItem('theme') || 'dark';
+  const m = {
+    light: { '--bg': '#f5f5f7', '--text': '#1d1d1f', '--accent': '#0a84ff' },
+    sepia: { '--bg': '#f0e4cf', '--text': '#4a3c2a', '--accent': '#b07d3a' },
+    ocean: { '--bg': '#0b1f33', '--text': '#d7e5f2', '--accent': '#3d9be9' },
+    purple: { '--bg': '#221a2e', '--text': '#e4dced', '--accent': '#9c6bff' },
+    glass: { '--bg': '#16181d', '--text': '#e8e8ea', '--accent': '#4a9eff' },
+  }[t];
+  if (m) for (const [k, v] of Object.entries(m)) document.documentElement.style.setProperty(k, v);
+})();
+
+// 隐藏 Splash（首次 loadDir 渲染后调用；3s 兜底防卡死）
+let splashHidden = false;
+function hideSplash() {
+  if (splashHidden) return;
+  splashHidden = true;
+  const sp = $('splash');
+  if (!sp) return;
+  sp.style.opacity = '0';
+  sp.addEventListener('transitionend', () => (sp.style.display = 'none'), { once: true });
+  // transition 兜底
+  setTimeout(() => (sp.style.display = 'none'), 300);
+}
+setTimeout(hideSplash, 3000);
+
 (async function init() {
+  // 开发自测：MFILE_SPLASH_TEST 为延迟毫秒数，Splash 保留该时长后再隐藏（截图验证用）
+  const splashTest = await invoke('get_env', { key: 'MFILE_SPLASH_TEST' }).catch(() => '');
+  const delay = parseInt(splashTest, 10);
+  if (delay > 0) {
+    const realHide = hideSplash;
+    window.hideSplash = () => {}; // 冻结：init 完成也不隐藏
+    setTimeout(() => { splashHidden = false; realHide(); }, delay);
+  }
   state.home = await invoke('home_dir');
   $('btnHidden').classList.toggle('active', state.showHidden);
   // 支持 MFILE_START_DIR 环境变量指定启动目录（用于自动化验证）
   const startDir = await invoke('get_env', { key: 'MFILE_START_DIR' });
   await loadDir(startDir && startDir.length > 0 ? startDir : state.home);
+  hideSplash();
 })();
