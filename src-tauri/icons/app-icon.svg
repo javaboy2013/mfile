@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- 背景渐变：深色蓝 -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2b3040"/>
+      <stop offset="55%" stop-color="#232734"/>
+      <stop offset="100%" stop-color="#1b1e28"/>
+    </linearGradient>
+
+    <!-- 文件夹主体渐变：品牌蓝 -->
+    <linearGradient id="folder" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0%" stop-color="#5aaeff"/>
+      <stop offset="100%" stop-color="#0a7bf0"/>
+    </linearGradient>
+
+    <!-- 文件夹高光 -->
+    <linearGradient id="folderLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- 内层卡片 -->
+    <linearGradient id="sheet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#e8edf5"/>
+    </linearGradient>
+
+    <!-- 底部光晕 -->
+    <radialGradient id="glow" cx="0.5" cy="0.72" r="0.62">
+      <stop offset="0%" stop-color="#4a9eff" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="#4a9eff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- 顶部玻璃高光：垂直渐隐，避免硬边 -->
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.075"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- 投影 -->
+    <filter id="drop" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="26" stdDeviation="30" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#0a2a55" flood-opacity="0.35"/>
+    </filter>
+
+    <!-- 背景圆角方形的裁切 -->
+    <clipPath id="squircle">
+      <path d="M0 512C0 235 0 163 0 100 0 44 44 0 100 0h824c56 0 100 44 100 100v824c0 56-44 100-100 100H100C44 1024 0 980 0 924Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- ===== 背板 ===== -->
+  <g clip-path="url(#squircle)">
+    <rect width="1024" height="1024" fill="url(#bg)"/>
+    <rect width="1024" height="1024" fill="url(#glow)"/>
+    <!-- 顶部玻璃高光 -->
+    <rect width="1024" height="1024" fill="url(#gloss)"/>
+  </g>
+  <path d="M0 512C0 235 0 163 0 100 0 44 44 0 100 0h824c56 0 100 44 100 100v824c0 56-44 100-100 100H100C44 1024 0 980 0 924Z" fill="none" stroke="#ffffff" stroke-opacity="0.09" stroke-width="3"/>
+
+  <!-- ===== 文件夹 ===== -->
+  <g filter="url(#drop)">
+    <!-- 后层（文件夹后板） -->
+    <path d="M196 396c0-26 21-47 47-47h150c14 0 27 6 35 17l44 58h296c26 0 47 21 47 47v238c0 26-21 47-47 47H243c-26 0-47-21-47-47Z"
+          fill="#0a63c4" opacity="0.95"/>
+
+    <!-- 前层（文件夹主体） -->
+    <path d="M196 462c0-26 21-47 47-47h150c14 0 27 6 35 17l44 58h296c26 0 47 21 47 47v214c0 26-21 47-47 47H243c-26 0-47-21-47-47Z"
+          fill="url(#folder)"/>
+    <!-- 顶部高光 -->
+    <path d="M196 462c0-26 21-47 47-47h150c14 0 27 6 35 17l44 58h296c26 0 47 21 47 47v6H196Z"
+          fill="url(#folderLight)"/>
+  </g>
+
+  <!-- ===== 文件卡片（列表内容） ===== -->
+  <g filter="url(#soft)">
+    <rect x="286" y="470" width="452" height="292" rx="34" fill="url(#sheet)"/>
+    <!-- 顶部把手机械感的高光条 -->
+    <rect x="286" y="470" width="452" height="52" rx="26" fill="#ffffff" opacity="0.7"/>
+    <rect x="286" y="496" width="452" height="26" fill="#ffffff" opacity="0.7"/>
+
+    <!-- 三行列表项 -->
+    <g fill="#2b6cb8">
+      <circle cx="352" cy="562" r="21"/>
+      <circle cx="352" cy="636" r="21"/>
+      <circle cx="352" cy="710" r="21"/>
+    </g>
+    <g fill="#8fa3bb">
+      <rect x="396" y="546" width="288" height="32" rx="16"/>
+      <rect x="396" y="620" width="288" height="32" rx="16"/>
+      <rect x="396" y="694" width="196" height="32" rx="16"/>
+    </g>
+  </g>
+</svg>
