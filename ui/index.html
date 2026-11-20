@@ -518,6 +518,8 @@
   .row.selected:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
   .row .ico { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; }
   .row .ico svg { width: 18px; height: 18px; display: block; }
+  /* 真实应用图标（app.getFileIcon dataURL） */
+  .row .ico img { width: 18px; height: 18px; display: block; border-radius: 4px; object-fit: contain; }
   .row .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .row .name input {
     width: 100%;

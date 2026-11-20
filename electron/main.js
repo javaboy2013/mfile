@@ -23,6 +23,14 @@ function readThemeDark() {
   }
 }
 
+// ---------- GPU 兜底 ----------
+// 本机（远程桌面/虚拟显卡环境）Metal 可用性不稳，GPU 进程反复 crash 会导致
+// 窗口无法创建（ready-to-show 永不触发）甚至主进程 FATAL 退出（实测崩溃在 Metal）。
+// 强制软件渲染：禁 GPU 合成 + SwiftShader。普通真机上也只是不启硬件加速，功能无差。
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-gpu-compositing');
+app.commandLine.appendSwitch('use-angle', 'swiftshader');
+
 // ---------- 主窗口 ----------
 // MFILE_HEADLESS=1：窗口不显示（E2E 后台跑，不抢前台焦点）；渲染/DOM 照常工作
 const HEADLESS = !!process.env.MFILE_HEADLESS;
@@ -89,6 +97,7 @@ function registerIpc() {
   h('dir_size', (a) => fsOps.dirSize(a.path));
   h('search_files', (a) => fsOps.searchFiles(a.root, a.query, a.maxResults));
   h('open_path', (a) => fsOps.openPath(a.path));
+  h('app_icon', (a) => fsOps.appIcon(a.path, a.size || 32));
   h('open_in_terminal', (a) => fsOps.openInTerminal(a.path));
   h('exists', (a) => fs.existsSync(a.path));
   h('get_env', (a) => process.env[a.key] ?? null);

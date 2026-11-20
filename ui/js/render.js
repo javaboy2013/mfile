@@ -3,6 +3,18 @@
 
 import { state } from './state.js';
 import { $, esc, fmtSize, fmtDate, iconFor, SVG } from './utils.js';
+import { appIcon } from './commands.js';
+
+// 应用真实图标异步补挂：占位 SVG 先渲染，dataURL 回来后替换 .ico 内容
+const iconPainted = new Set();
+function paintRealIcon(row, e) {
+  if (iconPainted.has(e.path)) return;
+  iconPainted.add(e.path);
+  appIcon(e.path).then((url) => {
+    const ico = row?.querySelector('.ico');
+    if (ico) ico.innerHTML = `<img src="${url}" alt="" draggable="false">`;
+  }).catch(() => {});
+}
 
 /** 过滤 + 排序后的可见条目（目录置顶） */
 export function visibleEntries() {
@@ -114,6 +126,7 @@ export function renderList() {
       <span class="name" data-path="${esc(e.path)}">${esc(e.name)}</span>
       <span class="size">${e.is_dir ? '' : fmtSize(e.size)}</span>
       <span class="date">${fmtDate(e.modified)}</span>`;
+    if (e.ext === 'app' || (e.is_dir && e.name.endsWith('.app'))) paintRealIcon(row, e);
     frag.appendChild(row);
   });
   fl.appendChild(frag);

@@ -110,7 +110,10 @@ npm test            # 单元测试（node --test，毫秒级，IPC 实现层）
 npm run test:e2e    # E2E（Playwright 驱动真实 app，后台无窗口弹跳）
 npm run test:all    # 单测 + E2E 全量
 npm run dist        # electron-builder 打 dmg + zip（dist/）
+npm run deploy      # 打包 + 覆盖安装到 /Applications（交付验收用）
 ```
+
+> 打包安装的完整流程、产物说明与踩坑见 [docs/打包安装指南.md](docs/打包安装指南.md)。
 
 ### 自测体系（分层）
 

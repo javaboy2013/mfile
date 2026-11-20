@@ -9,7 +9,8 @@
     "test": "node --test electron/test/*.test.js",
     "test:e2e": "playwright test",
     "test:all": "npm test && npm run test:e2e",
-    "dist": "electron-builder --mac"
+    "dist": "electron-builder --mac",
+    "deploy": "electron-builder --mac && rm -rf /Applications/mfile.app && cp -R dist/mac-arm64/mfile.app /Applications/ && echo '✓ 已安装到 /Applications/mfile.app'"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

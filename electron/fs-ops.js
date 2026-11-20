@@ -8,6 +8,21 @@ const path = require('path');
 const { execFile } = require('child_process');
 const { detectArchive } = require('./archive');
 
+/** 应用真实图标：app.getFileIcon(path) → dataURL，带进程级缓存。
+ *  供渲染层 .app 条目用 <img> 展示真实图标（size 32 足够列表 + 2x retina）。 */
+const iconCache = new Map();
+async function appIcon(p, size = 32) {
+  const key = `${p}|${size}`;
+  if (iconCache.has(key)) return iconCache.get(key);
+  // 延迟 require：本文件被单测直接加载（无 electron 环境）
+  const { app } = require('electron');
+  const icon = await app.getFileIcon(p, { size });
+  const url = icon.toDataURL();
+  iconCache.set(key, url);
+  return url;
+}
+
+
 /** 列目录：目录置顶、按名排序（不区分大小写），返回 { entries, parent } */
 async function listDir(p, showHidden) {
   const stat = await fsp.stat(p).catch(() => null);
@@ -212,4 +227,5 @@ module.exports = {
   openPath,
   openInTerminal,
   testError,
+  appIcon,
 };

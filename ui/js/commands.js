@@ -38,6 +38,9 @@ export const searchFiles = (root, query, maxResults) =>
 /** 用系统 open 打开文件/目录 */
 export const openPath = (path) => invoke('open_path', { path });
 
+/** 真实应用图标（dataURL，主进程缓存） */
+export const appIcon = (path, size = 32) => invoke('app_icon', { path, size });
+
 /** 在 Terminal.app 打开目录 */
 export const openInTerminal = (path) => invoke('open_in_terminal', { path });
 
