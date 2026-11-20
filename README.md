@@ -18,6 +18,24 @@ macOS 文件管理器，访达（Finder）替代品。Electron（Multica 同款�
 
 ![隐藏文件](docs/screenshots/hidden-files.png)
 
+## ⚠️ 首次安装必读：打开被拦截？两步解决
+
+mfile 是**开源免费软件，未购买 Apple 开发者签名**（$99/年），首次打开会被 macOS Gatekeeper 拦截。**这不是病毒警告**，只是苹果对所有无签名应用的统一提示。代码完全开源可审计，请放心使用。
+
+**两步解决，30 秒搞定：**
+
+**第 1 步**：双击打开 mfile 弹出拦截框时，点击「**完成**」（不要慌，这只是个确认框）：
+
+![拦截弹窗](docs/screenshots/gatekeeper-1.png)
+
+**第 2 步**：打开 **系统设置 → 隐私与安全性**，找到 mfile 的提示，点「**仍要打开**」：
+
+![仍要打开](docs/screenshots/gatekeeper-2.png)
+
+之后就和正常软件一样，不会再拦截。
+
+> 命令行用户也可以一条命令跳过：`sudo xattr -rd com.apple.quarantine /Applications/mfile.app`
+
 > **架构沿革**：v0.1.x 基于 Tauri 2 + Rust（安装包 7 MB），因 WKWebView 架构下启动闪屏无法根治（详见下文「为什么弃用 Tauri」），v0.2.0 起完全切换 Electron。
 
 ## 功能
