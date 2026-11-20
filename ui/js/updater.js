@@ -6,14 +6,15 @@ import { $, esc } from './utils.js';
 import { appVersion } from './commands.js';
 
 export function bindUpdaterMenu() {
-  $('btnUpdate').onclick = () => doCheck(true);
+  $('btnUpdate').onclick = () => checkNow(true);
 }
 
 export function autoCheck() {
-  setTimeout(() => doCheck(false), 3000);
+  setTimeout(() => checkNow(false), 3000);
 }
 
-async function doCheck(manual) {
+/** 检查更新（manual=true 时弹结果框；原生菜单「检查更新…」也走这里） */
+export async function checkNow(manual) {
   let update = null;
   try {
     update = await invoke('updater_check');

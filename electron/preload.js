@@ -12,4 +12,10 @@ contextBridge.exposeInMainWorld('mfile', {
     ipcRenderer.on(`updater:${channel}`, listener);
     return () => ipcRenderer.removeListener(`updater:${channel}`, listener);
   },
+  // 原生菜单动作下发
+  onMenuAction: (cb) => {
+    const listener = (_e, payload) => cb(payload);
+    ipcRenderer.on('menu:action', listener);
+    return () => ipcRenderer.removeListener('menu:action', listener);
+  },
 });

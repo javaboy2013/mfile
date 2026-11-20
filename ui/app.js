@@ -8,10 +8,12 @@ import { bindThemeMenu } from './js/theme.js';
 import { bindEvents } from './js/events.js';
 import { hideSplash } from './js/splash.js';
 import { bindUpdaterMenu, autoCheck } from './js/updater.js';
+import { bindMenuActions } from './js/menu-bridge.js';
 
 bindEvents();
 bindThemeMenu();
 bindUpdaterMenu();
+bindMenuActions(); // 原生菜单动作分发
 autoCheck();
 
 (async function init() {

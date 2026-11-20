@@ -286,6 +286,37 @@ test('目录置顶排序', async ({ win }) => {
   await expect(first).toHaveText(/docs|payload/); // 目录在最前
 });
 
+// ---------- 原生菜单 ----------
+test('原生应用菜单：中文六大菜单与关键项就位', async ({ app }) => {
+  const labels = await app.evaluate(({ Menu }) => {
+    return Menu.getApplicationMenu().items.map((i) => i.label);
+  });
+  for (const label of ['mfile', '文件', '编辑', '显示', '前往', '窗口', '帮助']) {
+    expect(labels, labels.join(',')).toContain(label);
+  }
+  // 文件菜单含关键动作项
+  const fileItems = await app.evaluate(({ Menu }) => {
+    const file = Menu.getApplicationMenu().items.find((i) => i.label === '文件');
+    return file.submenu.items.map((i) => i.label);
+  });
+  for (const label of ['新建文件夹', '压缩为 ZIP', '移到废纸篓']) {
+    expect(fileItems, fileItems.join(',')).toContain(label);
+  }
+});
+
+test('菜单动作 IPC 通路：主进程下发 → 渲染层执行', async ({ app, win }) => {
+  // 主进程发「前往：主目录」动作 → 渲染层导航
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', { action: 'go:home' });
+  });
+  await expect(win.locator('#statusText')).toHaveText(process.env.HOME ?? '', { timeout: 5_000 });
+  // 菜单动作切主题
+  await app.evaluate(({ BrowserWindow }) => {
+    BrowserWindow.getAllWindows()[0].webContents.send('menu:action', { action: 'view:theme:sepia' });
+  });
+  await expect(win.locator('html')).toHaveAttribute('data-theme', 'sepia');
+});
+
 // ---------- 主题 ----------
 test('主题切换持久化', async ({ win }) => {
   await win.click('#btnTheme');

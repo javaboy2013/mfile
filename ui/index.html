@@ -356,17 +356,19 @@
   }
   .tb-btn {
     height: 28px;
-    padding: 0 10px;
+    padding: 0 11px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 7px;
     background: var(--panel-2);
     color: var(--text);
     cursor: pointer;
     font-size: 12px;
     display: flex; align-items: center; gap: 4px;
+    transition: background .12s ease, border-color .12s ease;
   }
-  .tb-btn:hover { background: var(--hover); }
-  .tb-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tb-btn:hover { background: var(--hover); border-color: color-mix(in srgb, var(--accent) 30%, var(--border)); }
+  .tb-btn:active { transform: translateY(0.5px); }
+  .tb-btn.active { background: color-mix(in srgb, var(--accent) 16%, transparent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); color: var(--text); }
 
   /* 主区域：侧栏 + 内容 */
   .main { flex: 1; display: flex; min-height: 0; }

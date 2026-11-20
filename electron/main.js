@@ -9,6 +9,7 @@ const fs = require('fs');
 const fsOps = require('./fs-ops');
 const { zipEntries, extractHere } = require('./archive');
 const { trashDir, emptyTrash } = require('./trash');
+const { installAppMenu } = require('./menu');
 
 // ---------- 主题偏好（窗口底色与前端主题一致，双保险） ----------
 const prefsPath = () => path.join(app.getPath('userData'), 'prefs.json');
@@ -138,11 +139,13 @@ function updaterInstall() {
 // ---------- 应用生命周期 ----------
 app.whenReady().then(() => {
   const win = createWindow();
+  installAppMenu(win); // 中文原生菜单（动作经 IPC 下发渲染层）
   initUpdater(win);
   registerIpc();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       const w = createWindow();
+      installAppMenu(w);
       initUpdater(w);
     }
   });
