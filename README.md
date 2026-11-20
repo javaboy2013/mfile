@@ -4,6 +4,20 @@
 
 macOS 文件管理器，访达（Finder）替代品。Electron（Multica 同款架构）+ 原生 HTML/JS 前端，无前端框架。安装包 ~110 MB（含 Chromium）。
 
+## 界面预览
+
+**主界面——「我的电脑」D/E/F 盘 + 快速访问，Windows 手感直接回归：**
+
+![主界面](docs/screenshots/main-view.png)
+
+**右键菜单——复制路径/文件名、压缩解压、终端打开，一应俱全：**
+
+![右键菜单](docs/screenshots/context-menu.png)
+
+**一键显示隐藏文件——.git / .env 直接现形：**
+
+![隐藏文件](docs/screenshots/hidden-files.png)
+
 > **架构沿革**：v0.1.x 基于 Tauri 2 + Rust（安装包 7 MB），因 WKWebView 架构下启动闪屏无法根治（详见下文「为什么弃用 Tauri」），v0.2.0 起完全切换 Electron。
 
 ## 功能
