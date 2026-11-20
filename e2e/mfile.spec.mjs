@@ -41,11 +41,16 @@ test('面包屑跳转任意层级', async ({ win, fixtureDir }) => {
   await expect(win.locator('#statusText')).not.toHaveText(`${fixtureDir}/docs`);
 });
 
-// ---------- 多格式解压 ----------
+// ---------- 多格式解压（二级菜单：压缩 ▸） ----------
+async function openSubmenu(win, parentLabel) {
+  await win.locator('.ctx-item.has-sub', { hasText: parentLabel }).hover();
+}
+
 test('右键解压 tar.gz：菜单出现、解压成功、内容正确', async ({ win, fixtureDir }) => {
   const row = win.locator('.row', { hasText: 'bundle.tar.gz' });
   await row.click({ button: 'right' });
-  const item = win.locator('.ctx-item', { hasText: '解压到当前目录' });
+  await openSubmenu(win, '压缩');
+  const item = win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' });
   await expect(item).toBeVisible();
   await item.click();
   await expect(win.locator('#toast')).toContainText('解压完成');
@@ -62,7 +67,8 @@ test('右键解压 tar.gz：菜单出现、解压成功、内容正确', async (
 test('右键解压 gz：单文件流式解压去后缀', async ({ win, fixtureDir }) => {
   const row = win.locator('.row', { hasText: 'note.txt.gz' });
   await row.click({ button: 'right' });
-  await win.locator('.ctx-item', { hasText: '解压到当前目录' }).click();
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
   await expect(win.locator('#toast')).toContainText('解压完成');
   expect(fs.readFileSync(path.join(fixtureDir, 'note.txt'), 'utf8')).toBe('gz-content');
 });
@@ -71,40 +77,63 @@ test('解压同名冲突：报错且不覆盖', async ({ win, fixtureDir }) => {
   // 预制造冲突：先解压 note.txt.gz 成功，再解压一次
   const row = win.locator('.row', { hasText: 'note.txt.gz' });
   await row.click({ button: 'right' });
-  await win.locator('.ctx-item', { hasText: '解压到当前目录' }).click();
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
   await expect(win.locator('#toast')).toContainText('解压完成');
   await row.click({ button: 'right' });
-  await win.locator('.ctx-item', { hasText: '解压到当前目录' }).click();
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
   await expect(win.locator('#toast')).toContainText('目标已存在');
   expect(fs.readFileSync(path.join(fixtureDir, 'note.txt'), 'utf8')).toBe('gz-content');
 });
 
 test('右键解压 zip', async ({ win, fixtureDir }) => {
   await win.locator('.row', { hasText: 'arch.zip' }).click({ button: 'right' });
-  await win.locator('.ctx-item', { hasText: '解压到当前目录' }).click();
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
   await expect(win.locator('#toast')).toContainText('解压完成');
   expect(fs.readFileSync(path.join(fixtureDir, 'payload/inner.txt'), 'utf8')).toBe('tar-content');
 });
 
 test('非压缩文件无解压菜单项', async ({ win }) => {
   await win.locator('.row', { hasText: 'hello.txt' }).click({ button: 'right' });
-  await expect(win.locator('.ctx-item', { hasText: '解压到当前目录' })).toHaveCount(0);
+  await openSubmenu(win, '压缩');
+  await expect(win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' })).toBeHidden();
 });
 
 // ---------- 压缩 ----------
 test('右键压缩为 zip', async ({ win, fixtureDir }) => {
   await win.locator('.row', { hasText: 'hello.txt' }).click({ button: 'right' });
-  await win.locator('.ctx-item', { hasText: '压缩为 ZIP' }).click();
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '压缩为 ZIP' }).click();
   await expect(win.locator('#toast')).toContainText('已压缩为 hello.txt.zip');
   await expect
     .poll(() => fs.existsSync(path.join(fixtureDir, 'hello.txt.zip')))
     .toBe(true);
 });
 
+// ---------- 右键菜单结构 ----------
+test('右键菜单分组与二级菜单结构', async ({ win }) => {
+  await win.locator('.row', { hasText: 'hello.txt' }).click({ button: 'right' });
+  // 一级项（精确匹配，避免「打开」误中「在终端中打开」）
+  for (const label of ['打开', '复制', '剪切', '粘贴', '在终端中打开', '重命名', '删除']) {
+    await expect(win.locator(`#ctxMenu > .ctx-item[data-label="${label}"]`)).toBeVisible();
+  }
+  // 二级父项 + 分隔线存在
+  for (const label of ['拷贝为', '压缩', '新建']) {
+    await expect(win.locator(`#ctxMenu > .ctx-item.has-sub[data-label="${label}"]`)).toBeVisible();
+  }
+  await expect(win.locator('#ctxMenu > .ctx-sep').first()).toBeVisible();
+  // 快捷键提示
+  await expect(
+    win.locator('#ctxMenu > .ctx-item[data-label="复制"] .ctx-hint')
+  ).toHaveText('⌘C');
+});
+
 // ---------- 废纸篓 ----------
 test('删除移入废纸篓（确认弹窗）', async ({ win, fixtureDir }) => {
   await win.locator('.row', { hasText: 'hello.txt' }).click({ button: 'right' });
-  await win.locator('.ctx-item', { hasText: /^删除$/ }).click();
+  await win.locator('#ctxMenu > .ctx-item[data-label="删除"]').click();
   await expect(win.locator('.modal h3')).toHaveText('移到废纸篓');
   await win.locator('#modalOk').click();
   await expect(win.locator('#toast')).toContainText('已移到废纸篓');

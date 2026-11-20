@@ -297,6 +297,37 @@
   .topbar { -webkit-app-region: drag; }
   .topbar button, .topbar input, .topbar .crumbs { -webkit-app-region: no-drag; }
   .toolbar-actions { display: flex; gap: 6px; -webkit-app-region: no-drag; }
+
+  /* ---- 右键菜单（分组 + 二级子菜单）---- */
+  .ctx-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 5px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ctx-item.danger { color: var(--danger); }
+  .ctx-item .ctx-hint { margin-left: auto; color: var(--text-dim); font-size: 11px; }
+  .ctx-item .ctx-arrow { margin-left: auto; color: var(--text-dim); font-size: 10px; }
+  .ctx-sep { height: 1px; margin: 4px 8px; background: var(--border); }
+  /* 二级子菜单：hover 父项时在右侧展开；父菜单贴右缘时翻转到左侧 */
+  .ctx-sub {
+    display: none;
+    position: absolute;
+    left: 100%;
+    top: -5px;
+    min-width: 150px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 0;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .4);
+  }
+  .ctx-item.flip-sub > .ctx-sub { left: auto; right: 100%; }
+  .ctx-item.has-sub:hover > .ctx-sub { display: block; }
   .tb-btn {
     height: 28px;
     padding: 0 10px;

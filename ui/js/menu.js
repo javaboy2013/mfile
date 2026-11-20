@@ -1,13 +1,15 @@
-// 右键菜单：条目操作集合 + 废纸篓上下文项。菜单项函数来自 actions。
+// 右键菜单：分组 + 二级子菜单（参考访达组织方式）。
+// 条目结构：{ label, hint?, danger?, fn } | { label, sub: [...] } | { sep: true }
 
 import { state } from './state.js';
 import { $ } from './utils.js';
 import { renderList, renderStatus } from './render.js';
 import {
-  copyPaths, copyNames, deleteSelected, copySelected, cutSelected,
+  copyPaths, copyNames, deleteSelected, copySelected, cutSelected, paste,
   zipSelected, extractToHere, emptyTrashConfirm, openTerminalHere,
-  newFolder, newFile,
+  newFolder, newFile, renameEntry,
 } from './actions.js';
+import { openEntry } from './nav.js';
 
 export function showCtxMenu(ev, entry) {
   if (entry) {
@@ -18,43 +20,102 @@ export function showCtxMenu(ev, entry) {
       renderStatus();
     }
   }
-  const menu = $('ctxMenu');
-  const items = [];
   const hasSel = state.selected.size > 0;
-  if (hasSel) {
-    items.push({ label: '复制路径', fn: copyPaths });
-    items.push({ label: '复制文件名', fn: copyNames });
-    items.push({ label: '删除', danger: true, fn: deleteSelected });
-    items.push({ label: '复制', fn: copySelected });
-    items.push({ label: '剪切', fn: cutSelected });
-    items.push({ label: '压缩为 ZIP', fn: zipSelected });
-    // 唯一选中且是压缩文件（zip/tar/gz/tgz/bz2/xz/7z/rar…）时提供解压
-    if (state.selected.size === 1) {
-      const only = state.entries.find((x) => x.path === [...state.selected][0]);
-      if (only && only.is_archive) {
-        items.push({ label: '解压到当前目录', fn: () => extractToHere(only.path) });
-      }
-    }
+  // 唯一选中且是压缩文件时提供解压
+  let archiveOnly = null;
+  if (state.selected.size === 1) {
+    const only = state.entries.find((x) => x.path === [...state.selected][0]);
+    if (only && only.is_archive) archiveOnly = only;
   }
-  items.push({ label: '在终端中打开', fn: openTerminalHere });
-  items.push({ label: '新建文件夹', fn: newFolder });
-  items.push({ label: '新建文件', fn: newFile });
+
+  const items = [];
+  if (entry) {
+    items.push({ label: '打开', fn: () => openEntry(entry) });
+    items.push({ sep: true });
+    items.push({ label: '复制', hint: '⌘C', fn: copySelected });
+    items.push({ label: '剪切', hint: '⌘X', fn: cutSelected });
+    items.push({ label: '粘贴', hint: '⌘V', fn: paste });
+    items.push({ sep: true });
+    items.push({
+      label: '拷贝为',
+      sub: [
+        { label: '拷贝路径', fn: copyPaths },
+        { label: '拷贝文件名', fn: copyNames },
+      ],
+    });
+    const archSub = [{ label: '压缩为 ZIP', fn: zipSelected }];
+    if (archiveOnly) {
+      archSub.push({ label: '解压到当前目录', fn: () => extractToHere(archiveOnly.path) });
+    }
+    items.push({ label: '压缩', sub: archSub });
+    items.push({ sep: true });
+    items.push({ label: '在终端中打开', fn: openTerminalHere });
+    if (hasSel && state.selected.size === 1) {
+      items.push({ label: '重命名', hint: 'F2', fn: renameEntry });
+    }
+    items.push({ sep: true });
+    items.push({
+      label: '新建',
+      sub: [
+        { label: '新建文件夹', fn: newFolder },
+        { label: '新建文件', fn: newFile },
+      ],
+    });
+    items.push({ sep: true });
+    items.push({ label: '删除', hint: '⌫', danger: true, fn: deleteSelected });
+  }
   // 在废纸篓目录时提供清空
   if (state.cwd && state.cwd.endsWith('/.Trash')) {
+    items.push({ sep: true });
     items.push({ label: '清空废纸篓', danger: true, fn: emptyTrashConfirm });
   }
-  menu.innerHTML = items
-    .map((it, i) => `<div class="ctx-item${it.danger ? ' danger' : ''}" data-i="${i}" style="padding:6px 14px;cursor:pointer;font-size:12px;${it.danger ? 'color:var(--danger)' : ''}">${it.label}</div>`)
-    .join('');
+
+  renderMenu(ev, items);
+}
+
+function renderMenu(ev, items) {
+  const menu = $('ctxMenu');
+  menu.innerHTML = items.map(itemHtml).join('');
+  // 定位（沿用原逻辑：贴边收进）
   menu.style.display = 'block';
-  menu.style.left = Math.min(ev.clientX, window.innerWidth - 160) + 'px';
-  menu.style.top = Math.min(ev.clientY, window.innerHeight - 40 * items.length) + 'px';
-  menu.querySelectorAll('.ctx-item').forEach((el) => {
+  menu.style.left = Math.min(ev.clientX, window.innerWidth - 170) + 'px';
+  menu.style.top = Math.min(ev.clientY, window.innerHeight - 30 * items.length) + 'px';
+  // 父菜单贴右缘时，二级子菜单翻转到左侧展开
+  const menuRight = menu.getBoundingClientRect().right;
+  if (menuRight + 160 > window.innerWidth) {
+    menu.querySelectorAll('.ctx-item.has-sub').forEach((el) => el.classList.add('flip-sub'));
+  }
+  bindItemEvents(menu, items);
+  // 子菜单条目绑定（fn 在子数组里）
+  menu.querySelectorAll('.ctx-item.has-sub').forEach((parent, i) => {
+    const sub = items.filter((it) => it.sub)[i];
+    bindItemEvents(parent.querySelector('.ctx-sub'), sub.sub);
+  });
+}
+
+function itemHtml(it) {
+  if (it.sep) return '<div class="ctx-sep"></div>';
+  const cls = 'ctx-item' + (it.danger ? ' danger' : '') + (it.sub ? ' has-sub' : '');
+  const right = it.sub
+    ? '<span class="ctx-arrow">▶</span>'
+    : it.hint
+      ? `<span class="ctx-hint">${it.hint}</span>`
+      : '';
+  return `<div class="${cls}" data-label="${it.label}"><span>${it.label}</span>${right}${
+    it.sub ? `<div class="ctx-sub">${it.sub.map(itemHtml).join('')}</div>` : ''
+  }</div>`;
+}
+
+function bindItemEvents(container, items) {
+  if (!container) return;
+  container.querySelectorAll(':scope > .ctx-item').forEach((el) => {
+    const it = items.find((x) => x.label === el.dataset.label && !x.sep);
     el.onmouseenter = () => (el.style.background = 'var(--hover)');
     el.onmouseleave = () => (el.style.background = 'none');
     el.onclick = () => {
-      menu.style.display = 'none';
-      items[+el.dataset.i].fn();
+      if (!it || it.sub) return; // 分组父项不响应点击
+      $('ctxMenu').style.display = 'none';
+      it.fn();
     };
   });
 }
