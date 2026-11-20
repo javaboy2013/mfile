@@ -277,7 +277,8 @@
     cursor: pointer;
     color: var(--text-dim);
   }
-  .crumb:hover { background: var(--row-hover); color: var(--text); }
+  /* hover 取原深灰与行 hover 之间：文字色 8% 淡显，各主题自适应 */
+  .crumb:hover { background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text); }
   .crumb.last { color: var(--text); font-weight: 600; }
   .crumb-sep { color: var(--text-dim); opacity: .5; }
   .topbar { -webkit-app-region: drag; }
