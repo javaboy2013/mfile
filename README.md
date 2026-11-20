@@ -1,5 +1,7 @@
 # mfile
 
+> **你的习惯，我来适配。** 为 Windows 转来的用户设计的 macOS 文件管理器。
+
 macOS 文件管理器，访达（Finder）替代品。Electron（Multica 同款架构）+ 原生 HTML/JS 前端，无前端框架。安装包 ~110 MB（含 Chromium）。
 
 > **架构沿革**：v0.1.x 基于 Tauri 2 + Rust（安装包 7 MB），因 WKWebView 架构下启动闪屏无法根治（详见下文「为什么弃用 Tauri」），v0.2.0 起完全切换 Electron。
