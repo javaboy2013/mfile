@@ -53,6 +53,9 @@ export async function launchApp(startDir) {
   await win.waitForLoadState('domcontentloaded');
   // 等 init 首屏：状态栏出现路径文本（loadDir 完成）
   await expect(win.locator('#statusText')).toHaveText(startDir, { timeout: 10_000 });
+  // splash 必须完全 display:none——opacity:0 的透明层仍会拦截鼠标（曾致框选
+  // mousedown 落在 splash 上），等淡出兜底结束
+  await expect(win.locator('#splash')).toBeHidden({ timeout: 5_000 });
   return { app, win };
 }
 

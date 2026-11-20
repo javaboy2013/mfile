@@ -30,8 +30,21 @@ export function bindEvents() {
     return state.entries.find((e) => e.path === row.dataset.path) || null;
   };
   list.addEventListener('click', (ev) => {
+    if (rubber.suppressed) {
+      rubber.suppressed = false; // 拖动后的释放不再触发点击选中
+      return;
+    }
     const e = entryOf(ev);
     if (e) selectRow(ev, e);
+    else if (ev.target.id === 'fileList') {
+      // 点击空白：清空选择（访达行为）
+      if (state.selected.size) {
+        state.selected.clear();
+        state.lastSelected = null;
+        renderList();
+        renderStatus();
+      }
+    }
   });
   list.addEventListener('dblclick', (ev) => {
     const e = entryOf(ev);
@@ -42,6 +55,79 @@ export function bindEvents() {
     if (!e) return; // 空白处右键走系统默认（与原版一致）
     ev.preventDefault();
     showCtxMenu(ev, e);
+  });
+
+  // ---------- 鼠标框选（rubber-band，访达行为）----------
+  // 按下后拖动超过阈值即进入框选（起点可在行上或空白）；无拖动的释放仍是
+  // 点击选中。⌘ 按住拖拽为累加选择，否则重置为框选结果。
+  const rubber = { active: false, suppressed: false, startX: 0, startY: 0, band: null, base: null, rowRects: [] };
+  const DRAG_THRESHOLD = 4;
+
+  list.addEventListener('mousedown', (ev) => {
+    if (ev.button !== 0) return; // 仅左键
+    const rect = list.getBoundingClientRect();
+    rubber.startX = ev.clientX;
+    rubber.startY = ev.clientY;
+    rubber.active = true;
+    // ⌘ 累加模式：以当前选择为基底；普通模式基底为空
+    rubber.base = ev.metaKey || ev.ctrlKey ? new Set(state.selected) : new Set();
+    // 缓存行矩形（框选期间不重排列表）
+    rubber.rowRects = [...list.querySelectorAll('.row')].map((el) => ({
+      path: el.dataset.path,
+      rect: el.getBoundingClientRect(),
+    }));
+    void rect;
+  });
+
+  document.addEventListener('mousemove', (ev) => {
+    if (!rubber.active) return;
+    const dx = ev.clientX - rubber.startX;
+    const dy = ev.clientY - rubber.startY;
+    if (!rubber.band && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+    if (!rubber.band) {
+      rubber.band = document.createElement('div');
+      rubber.band.className = 'rubber-band';
+      document.body.appendChild(rubber.band);
+      document.body.classList.add('rubber-selecting');
+    }
+    rubber.suppressed = true; // 本轮按下产生过拖动：抑制随后的 click
+    // 选框几何（clamp 在列表可视区内）
+    const area = list.getBoundingClientRect();
+    const x1 = Math.max(rubber.startX, area.left);
+    const y1 = Math.max(rubber.startY, area.top);
+    const x2 = Math.min(ev.clientX, area.right);
+    const y2 = Math.min(ev.clientY, area.bottom);
+    const bx = Math.min(x1, x2);
+    const by = Math.min(y1, y2);
+    rubber.band.style.left = bx + 'px';
+    rubber.band.style.top = by + 'px';
+    rubber.band.style.width = Math.abs(x2 - x1) + 'px';
+    rubber.band.style.height = Math.abs(y2 - y1) + 'px';
+    // 相交判定 → 更新选择（DOM class 直改，避免高频重建列表）
+    const sel = new Set(rubber.base);
+    for (const { path, rect } of rubber.rowRects) {
+      const hit =
+        rect.left < bx + Math.abs(x2 - x1) && rect.right > bx &&
+        rect.top < by + Math.abs(y2 - y1) && rect.bottom > by;
+      if (hit) sel.add(path);
+    }
+    state.selected = sel;
+    for (const el of list.querySelectorAll('.row')) {
+      el.classList.toggle('selected', sel.has(el.dataset.path));
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!rubber.active) return;
+    rubber.active = false;
+    if (rubber.band) {
+      rubber.band.remove();
+      rubber.band = null;
+      document.body.classList.remove('rubber-selecting');
+      state.lastSelected = state.selected.size ? [...state.selected].at(-1) : null;
+      renderStatus();
+    }
+    // 无拖动（suppressed=false）时交由 click 事件处理选中/清空
   });
 
   // ---------- 侧栏：委托（data-idx → SIDEBAR） ----------

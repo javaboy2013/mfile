@@ -468,6 +468,17 @@
     cursor: default;
   }
   .row:hover { background: var(--row-hover); }
+
+  /* ---- 鼠标框选（rubber-band）---- */
+  .rubber-band {
+    position: fixed;
+    z-index: 100;
+    border: 1px solid var(--accent);
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    border-radius: 2px;
+    pointer-events: none;
+  }
+  body.rubber-selecting { user-select: none; cursor: crosshair; }
   .row.selected { background: var(--sel); color: var(--sel-text); }
   .row .ico { width: 22px; height: 22px; flex-shrink: 0; display: flex; align-items: center; }
   .row .ico svg { width: 18px; height: 18px; display: block; }

@@ -224,6 +224,54 @@ test('删除移入废纸篓（确认弹窗）', async ({ win, fixtureDir }) => {
     .toBe(false);
 });
 
+// ---------- 鼠标框选多选 ----------
+test('鼠标框选：拖动跨行批量选中', async ({ win }) => {
+  const rows = win.locator('#fileList .row');
+  const n = Math.min(await rows.count(), 4);
+  const first = await rows.nth(0).boundingBox();
+  const last = await rows.nth(n - 1).boundingBox();
+  // 从第一行左侧拖到第 n 行右侧（拖动超阈值即转框选，起点在行上亦可）
+  await win.mouse.move(first.x + 20, first.y + first.height / 2);
+  await win.mouse.down();
+  await win.mouse.move(last.x + (last.width - 20), last.y + last.height / 2, { steps: 10 });
+  await win.mouse.up();
+  await expect(win.locator('#sbSelected')).toHaveText(`已选 ${n} 项`);
+  const selectedCount = await win.locator('#fileList .row.selected').count();
+  expect(selectedCount).toBe(n);
+});
+
+test('框选后点击空白清空选择', async ({ win }) => {
+  // 过滤到单行，便于点击行下方空白
+  await win.fill('#filterInput', 'bundle');
+  await expect(win.locator('#fileList .row')).toHaveCount(1);
+  const row = win.locator('#fileList .row');
+  await row.click();
+  await expect(win.locator('#sbSelected')).toHaveText('已选 1 项');
+  // 点击行下方空白区域
+  const rb = await row.boundingBox();
+  const list = win.locator('#fileList');
+  const lb = await list.boundingBox();
+  await win.mouse.click(lb.x + lb.width / 2, Math.min(rb.y + rb.height + 20, lb.y + lb.height - 5));
+  await expect(win.locator('#sbSelected')).toHaveText('');
+});
+
+test('⌘ + 框选：累加到现有选择', async ({ win }) => {
+  const rows = win.locator('#fileList .row');
+  // 先选中第一行
+  await rows.nth(0).click();
+  await expect(win.locator('#sbSelected')).toHaveText('已选 1 项');
+  // ⌘ 框选第三到四行
+  const r3 = await rows.nth(2).boundingBox();
+  const r4 = await rows.nth(3).boundingBox();
+  await win.keyboard.down('Meta');
+  await win.mouse.move(r3.x + 20, r3.y + r3.height / 2);
+  await win.mouse.down();
+  await win.mouse.move(r4.x + 40, r4.y + r4.height / 2, { steps: 8 });
+  await win.mouse.up();
+  await win.keyboard.up('Meta');
+  await expect(win.locator('#sbSelected')).toHaveText('已选 3 项');
+});
+
 // ---------- 过滤与排序 ----------
 test('即时过滤', async ({ win }) => {
   const total = await win.locator('#fileList .row').count();

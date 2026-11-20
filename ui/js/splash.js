@@ -17,6 +17,7 @@ export function hideSplash(delay = 0) {
     splashHideScheduled = false;
     if (splashHidden) return;
     splashHidden = true;
+    sp.style.pointerEvents = 'none'; // 淡出动画期间即停止拦截鼠标
     sp.style.opacity = '0';
     sp.addEventListener('transitionend', () => (sp.style.display = 'none'), { once: true });
     setTimeout(() => (sp.style.display = 'none'), 300);
