@@ -13,6 +13,8 @@
     {
       "identifier": "opener:allow-reveal-item-in-dir",
       "allow": [{ "path": "**" }]
-    }
+    },
+    "updater:default",
+    "process:allow-restart"
   ]
 }

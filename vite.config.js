@@ -7,7 +7,7 @@ export default defineConfig({
     strictPort: true,
   },
   build: {
-    outDir: '../ui-dist',
+    outDir: '../dist',
     emptyOutDir: true,
   },
 });
