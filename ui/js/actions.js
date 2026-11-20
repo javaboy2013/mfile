@@ -4,7 +4,7 @@ import { state } from './state.js';
 import { $, toast, fmtSize, esc, copyToClipboard } from './utils.js';
 import {
   createDir, createFile, rename, moveEntries, copyEntries,
-  trashEntries, emptyTrash, zipEntries, unzipHere,
+  trashEntries, emptyTrash, zipEntries, extractHere,
   dirSize, openInTerminal,
 } from './commands.js';
 import { refresh } from './nav.js';
@@ -148,9 +148,10 @@ export async function zipSelected() {
   }
 }
 
-export async function unzipToHere(zipPath) {
+/** 解压压缩文件到当前目录（zip/tar/gz/tgz/bz2/xz/7z/rar） */
+export async function extractToHere(archivePath) {
   try {
-    await unzipHere(zipPath, state.cwd);
+    await extractHere(archivePath, state.cwd);
     await refresh();
     toast('解压完成');
   } catch (e) {

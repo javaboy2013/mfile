@@ -7,7 +7,7 @@ const { app, BrowserWindow, shell, ipcMain, nativeTheme } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const fsOps = require('./fs-ops');
-const { zipEntries, unzipHere } = require('./archive');
+const { zipEntries, extractHere } = require('./archive');
 const { trashDir, emptyTrash } = require('./trash');
 
 // ---------- 主题偏好（窗口底色与前端主题一致，双保险） ----------
@@ -76,7 +76,7 @@ function registerIpc() {
   h('trash_dir', () => trashDir());
   h('empty_trash', () => emptyTrash());
   h('zip_entries', (a) => zipEntries(a.items, a.destZip));
-  h('unzip_here', (a) => unzipHere(a.zipPath, a.destDir));
+  h('extract_here', (a) => extractHere(a.archivePath, a.destDir));
   h('dir_size', (a) => fsOps.dirSize(a.path));
   h('search_files', (a) => fsOps.searchFiles(a.root, a.query, a.maxResults));
   h('open_path', (a) => fsOps.openPath(a.path));

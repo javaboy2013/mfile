@@ -5,7 +5,7 @@ import { $ } from './utils.js';
 import { renderList, renderStatus } from './render.js';
 import {
   copyPaths, copyNames, deleteSelected, copySelected, cutSelected,
-  zipSelected, unzipToHere, emptyTrashConfirm, openTerminalHere,
+  zipSelected, extractToHere, emptyTrashConfirm, openTerminalHere,
   newFolder, newFile,
 } from './actions.js';
 
@@ -28,11 +28,11 @@ export function showCtxMenu(ev, entry) {
     items.push({ label: '复制', fn: copySelected });
     items.push({ label: '剪切', fn: cutSelected });
     items.push({ label: '压缩为 ZIP', fn: zipSelected });
-    // 唯一选中且是 .zip 时提供解压
+    // 唯一选中且是压缩文件（zip/tar/gz/tgz/bz2/xz/7z/rar…）时提供解压
     if (state.selected.size === 1) {
       const only = state.entries.find((x) => x.path === [...state.selected][0]);
-      if (only && !only.is_dir && only.ext === 'zip') {
-        items.push({ label: '解压到当前目录', fn: () => unzipToHere(only.path) });
+      if (only && only.is_archive) {
+        items.push({ label: '解压到当前目录', fn: () => extractToHere(only.path) });
       }
     }
   }

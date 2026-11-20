@@ -22,7 +22,10 @@ export const trashEntries = (items) => invoke('trash_entries', { items });
 export const emptyTrash = () => invoke('empty_trash');
 
 export const zipEntries = (items, destZip) => invoke('zip_entries', { items, destZip });
-export const unzipHere = (zipPath, destDir) => invoke('unzip_here', { zipPath, destDir });
+
+/** 解压压缩文件（zip/tar/gz/tgz/bz2/xz/7z/rar，主进程按类型分发） */
+export const extractHere = (archivePath, destDir) =>
+  invoke('extract_here', { archivePath, destDir });
 
 /** 递归计算目录大小（字节） */
 export const dirSize = (path) => invoke('dir_size', { path });

@@ -16,7 +16,7 @@ macOS 文件管理器，访达（Finder）替代品。Electron（Multica 同款�
 ### 文件操作
 - 新建文件 / 文件夹、重命名（⌘D / F2）
 - **删除移入废纸篓**（带确认弹窗），侧栏可浏览废纸篓、右键清空
-- **压缩为 ZIP / 解压**（右键菜单，系统 zip/unzip，解压前查同名冲突与路径穿越）
+- **压缩为 ZIP / 解压多格式**：右键压缩为 zip；右键解压支持 zip / tar / tar.gz / tgz / tar.bz2 / tar.xz / tar.zst / gz / bz2 / xz / zst / rar / 7z（解压前查同名冲突与路径穿越；rar/7z/zst 需 `brew install unrar / p7zip / zstd`，缺失时提示安装）
 - 复制（⌘C）/ 剪切（⌘X）/ 粘贴（⌘V），目录递归复制
 - 右键菜单：打开、在终端中打开（Terminal.app）、复制路径 / 文件名
 - 复制路径 / 错误信息后按钮上显示"已复制"回执（toast + 按钮变色）
@@ -93,7 +93,7 @@ main.js:  new BrowserWindow({ show:false, backgroundColor: 主题底色 })
 | `delete_entries` | fs-ops | 递归删除 |
 | `trash_entries` | shell.trashItems | **移入废纸篓**（Finder 同款行为） |
 | `trash_dir` / `empty_trash` | trash | 废纸篓路径 / 清空 |
-| `zip_entries` / `unzip_here` | archive | 系统 zip/unzip（解压前查冲突 + 拒绝 `../` 路径穿越） |
+| `zip_entries` / `extract_here` | archive | 压缩为 zip / 多格式解压（zip·tar 系·gz 系·rar·7z，含 `is_archive` 识别、冲突与穿越检查） |
 | `dir_size(path)` | fs-ops | 递归计算目录大小 |
 | `search_files(root, query, maxResults)` | fs-ops | 深度搜索，10s 超时上限 |
 | `open_path` / `open_in_terminal` | fs-ops | 系统 `open` / Terminal.app |

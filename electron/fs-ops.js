@@ -6,6 +6,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const { execFile } = require('child_process');
+const { detectArchive } = require('./archive');
 
 /** 列目录：目录置顶、按名排序（不区分大小写），返回 { entries, parent } */
 async function listDir(p, showHidden) {
@@ -33,6 +34,7 @@ async function listDir(p, showHidden) {
       modified: meta ? Math.floor(meta.mtimeMs / 1000) : null,
       is_hidden: isHidden,
       ext: path.extname(name).slice(1).toLowerCase() || null,
+      is_archive: !isDir && !!detectArchive(name), // 压缩文件标记（右键解压入口）
     });
   }
   entries.sort((a, b) =>
