@@ -13,8 +13,10 @@ test('启动：splash 淡出后主界面完整，列目录正确', async ({ app,
   await expect(win.locator('.row', { hasText: 'hello.txt' })).toBeVisible();
   await expect(win.locator('.row', { hasText: 'bundle.tar.gz' })).toBeVisible();
   await expect(win.locator('.row', { hasText: 'arch.zip' })).toBeVisible();
-  // 状态栏计数：docs 目录 + 4 文件 = 1 文件夹 4 文件
-  await expect(win.locator('#sbItems')).toHaveText(/1 个文件夹.*4 个文件/);
+  // 状态栏计数：至少 1 个文件夹（docs）且文件数 ≥ 夹具样本
+  await expect(win.locator('#sbItems')).toHaveText(/1 个文件夹，\d+ 个文件/);
+  const rows = await win.locator('#fileList .row').count();
+  expect(rows).toBeGreaterThanOrEqual(30);
   void app;
 });
 
@@ -112,6 +114,32 @@ test('右键压缩为 zip', async ({ win, fixtureDir }) => {
     .toBe(true);
 });
 
+// ---------- 文件类型图标 ----------
+test('各类型文件配类型徽标图标', async ({ win }) => {
+  // Office 系：底色徽标断言（docx 蓝 W / xlsx 绿 X / pptx 橙红 P）
+  const iconOf = async (name) => {
+    const html = await win
+      .locator('.row', { hasText: name })
+      .locator('.ico svg')
+      .innerHTML();
+    return html;
+  };
+  expect(await iconOf('报告.docx')).toContain('#2b579a');
+  expect(await iconOf('表格.xlsx')).toContain('#217346');
+  expect(await iconOf('演示.pptx')).toContain('#d24726');
+  // 代码系：各语言底色
+  expect(await iconOf('脚本.js')).toContain('#f0db4f');
+  expect(await iconOf('服务.ts')).toContain('#3178c6');
+  expect(await iconOf('爬虫.py')).toContain('#3776ab');
+  expect(await iconOf('引擎.rs')).toContain('#ce422b');
+  // 磁盘镜像：圆盘徽标
+  expect(await iconOf('安装包.dmg')).toContain('circle');
+  // 纯文本：白线文档图形
+  expect(await iconOf('笔记.txt')).toContain('4a7ce0');
+  // 媒体/文档保持
+  expect(await iconOf('手册.pdf')).toContain('PDF');
+});
+
 // ---------- 右键菜单结构 ----------
 test('右键菜单分组与二级菜单结构', async ({ win }) => {
   await win.locator('.row', { hasText: 'hello.txt' }).click({ button: 'right' });
@@ -144,10 +172,11 @@ test('删除移入废纸篓（确认弹窗）', async ({ win, fixtureDir }) => {
 
 // ---------- 过滤与排序 ----------
 test('即时过滤', async ({ win }) => {
+  const total = await win.locator('#fileList .row').count();
   await win.fill('#filterInput', 'tar');
   await expect(win.locator('#fileList .row')).toHaveCount(1);
   await win.fill('#filterInput', '');
-  await expect(win.locator('#fileList .row')).toHaveCount(5);
+  await expect(win.locator('#fileList .row')).toHaveCount(total);
 });
 
 test('目录置顶排序', async ({ win }) => {
