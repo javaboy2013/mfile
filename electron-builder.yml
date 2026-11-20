@@ -1,0 +1,17 @@
+appId: com.vincent.mfile
+productName: mfile
+directories:
+  buildResources: build
+files:
+  - electron/**/*
+  - ui/**/*
+  - package.json
+  - "!**/*.map"
+mac:
+  category: public.app-category.utilities
+  target:
+    - dmg
+    - zip # autoUpdater 更新通道（latest-mac.yml 指向 zip）
+publish:
+  provider: github
+  repo: javaboy2013/mfile

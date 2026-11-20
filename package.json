@@ -6,7 +6,7 @@
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
-    "test": "node --test electron/test/",
+    "test": "node --test electron/test/*.test.js",
     "dist": "electron-builder --mac"
   },
   "devDependencies": {
