@@ -30,17 +30,17 @@ test('双击进入目录、上一级返回', async ({ win, fixtureDir }) => {
   await expect(win.locator('#statusText')).toHaveText(fixtureDir);
 });
 
-test('面包屑跳转任意层级', async ({ win, fixtureDir }) => {
-  const docsRow = win.locator('.row', { hasText: 'docs' });
-  await docsRow.dblclick();
+test('⌘L 路径跳转（面包屑已默认隐藏）', async ({ win, fixtureDir }) => {
+  // 面包屑默认隐藏
+  await expect(win.locator('#crumbs')).toBeHidden();
+  // ⌘L 唤出路径输入框
+  await win.keyboard.press('Meta+l');
+  await expect(win.locator('#pathInput')).toBeVisible();
+  await win.fill('#pathInput', `${fixtureDir}/docs`);
+  await win.keyboard.press('Enter');
   await expect(win.locator('#statusText')).toHaveText(`${fixtureDir}/docs`);
-  // 点击面包屑第一段（/）之外：点 fixtureDir 名那一段回根
-  await win.click('.crumb', { });
-  // 点击最后一级 crumb（当前层）无跳转；点上一级段
-  const crumbs = win.locator('.crumb');
-  const n = await crumbs.count();
-  await crumbs.nth(n - 2).click(); // 倒数第二段 = 父目录
-  await expect(win.locator('#statusText')).not.toHaveText(`${fixtureDir}/docs`);
+  // 跳转后输入框退出、面包屑回到隐藏
+  await expect(win.locator('#crumbs')).toBeHidden();
 });
 
 // ---------- 多格式解压（二级菜单：压缩 ▸） ----------

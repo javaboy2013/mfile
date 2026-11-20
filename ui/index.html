@@ -646,6 +646,9 @@
 
   /* 路径编辑输入框 */
   #crumbs { cursor: text; }
+  /* 面包屑路径栏默认隐藏（当前路径见底部状态栏）；⌘L 路径跳转时临时唤出 */
+  #crumbs { display: none; }
+  #crumbs.path-editing { display: flex; }
   #pathInput {
     flex: 1;
     background: var(--panel-2);
