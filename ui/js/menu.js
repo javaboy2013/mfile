@@ -3,7 +3,7 @@
 
 import { state } from './state.js';
 import { $ } from './utils.js';
-import { renderList, renderStatus } from './render.js';
+import { renderList, renderStatus, visibleEntries } from './render.js';
 import {
   copyPaths, copyNames, deleteSelected, copySelected, cutSelected, paste,
   zipSelected, extractToHere, emptyTrashConfirm, openTerminalHere,
@@ -63,6 +63,30 @@ export function showCtxMenu(ev, entry) {
     });
     items.push({ sep: true });
     items.push({ label: '删除', hint: '⌫', danger: true, fn: deleteSelected });
+  } else {
+    // 空白处右键：新建 / 粘贴 / 全选 / 视图设置
+    items.push({
+      label: '新建',
+      sub: [
+        { label: '新建文件夹', fn: newFolder },
+        { label: '新建文件', fn: newFile },
+      ],
+    });
+    items.push({ label: '粘贴', hint: '⌘V', fn: paste });
+    items.push({
+      label: '全选',
+      hint: '⌘A',
+      fn: () => {
+        const { list } = visibleEntries();
+        state.selected = new Set(list.map((e) => e.path));
+        renderList();
+        renderStatus();
+      },
+    });
+    if (state.cwd && state.cwd.endsWith('/.Trash')) {
+      items.push({ sep: true });
+      items.push({ label: '清空废纸篓', danger: true, fn: emptyTrashConfirm });
+    }
   }
   // 在废纸篓目录时提供清空
   if (state.cwd && state.cwd.endsWith('/.Trash')) {

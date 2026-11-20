@@ -6,7 +6,7 @@ import { $, toast } from './utils.js';
 import { SIDEBAR, renderList, renderStatus, visibleEntries, applyTagsFromInput, addTag, removeTag } from './render.js';
 import { loadDir, goBack, goUp, openEntry, selectRow, showPathInput } from './nav.js';
 import {
-  newFolder, newFile, renameEntry, deleteSelected, copySelected, cutSelected,
+  renameEntry, deleteSelected, copySelected, cutSelected,
   paste, toggleHidden,
 } from './actions.js';
 import { runSearch } from './search.js';
@@ -17,10 +17,7 @@ export function bindEvents() {
   // ---------- 工具栏按钮 ----------
   $('btnBack').onclick = goBack;
   $('btnUp').onclick = goUp;
-  $('btnNewFolder').onclick = newFolder;
-  $('btnNewFile').onclick = newFile;
   $('btnHidden').onclick = toggleHidden;
-  $('btnDelete').onclick = deleteSelected;
 
   // ---------- 文件列表：事件委托（render 只产 data-path） ----------
   const list = $('fileList');
@@ -52,9 +49,8 @@ export function bindEvents() {
   });
   list.addEventListener('contextmenu', (ev) => {
     const e = entryOf(ev);
-    if (!e) return; // 空白处右键走系统默认（与原版一致）
     ev.preventDefault();
-    showCtxMenu(ev, e);
+    showCtxMenu(ev, e); // e 为 null 时弹空白菜单（新建/粘贴/全选）
   });
 
   // ---------- 鼠标框选（rubber-band，访达行为）----------
@@ -134,6 +130,10 @@ export function bindEvents() {
   $('sidebar').addEventListener('click', (ev) => {
     const item = ev.target.closest('.side-item');
     if (!item) return;
+    if (item.dataset.drive) {
+      loadDir(`${state.home}/${item.dataset.drive}`);
+      return;
+    }
     const target = SIDEBAR[+item.dataset.idx];
     if (target && target.path) loadDir(target.path);
   });

@@ -10,7 +10,7 @@
     "test:e2e": "playwright test",
     "test:all": "npm test && npm run test:e2e",
     "dist": "electron-builder --mac",
-    "deploy": "electron-builder --mac && rm -rf /Applications/mfile.app && cp -R dist/mac-arm64/mfile.app /Applications/ && echo '✓ 已安装到 /Applications/mfile.app'"
+    "deploy": "bash scripts/deploy-local.sh && rm -rf /Applications/mfile.app && cp -R dist/mfile-local.app /Applications/mfile.app && echo '✓ 已安装到 /Applications/mfile.app（本地版：原始 Electron 二进制，GPU 稳定）'"
   },
   "devDependencies": {
     "@playwright/test": "^1.65.1",

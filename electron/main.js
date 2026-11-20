@@ -11,6 +11,11 @@ const { zipEntries, extractHere } = require('./archive');
 const { trashDir, emptyTrash } = require('./trash');
 const { installAppMenu } = require('./menu');
 
+// 远程桌面（HDPViewer/虚拟显卡）环境下 GPU 合成器可能不光栅化 <img> 位图
+// （SVG 正常、位图空白），且 GPU 进程易反复崩溃。禁用 GPU 合成走软件路径，
+// 界面流畅度在本类环境无感知差异，稳定性与位图渲染显著提升。
+app.commandLine.appendSwitch('disable-gpu-compositing');
+
 // ---------- 主题偏好（窗口底色与前端主题一致，双保险） ----------
 const prefsPath = () => path.join(app.getPath('userData'), 'prefs.json');
 
@@ -22,14 +27,6 @@ function readThemeDark() {
     return nativeTheme.shouldUseDarkColors; // 首启无偏好：跟随系统
   }
 }
-
-// ---------- GPU 兜底 ----------
-// 本机（远程桌面/虚拟显卡环境）Metal 可用性不稳，GPU 进程反复 crash 会导致
-// 窗口无法创建（ready-to-show 永不触发）甚至主进程 FATAL 退出（实测崩溃在 Metal）。
-// 强制软件渲染：禁 GPU 合成 + SwiftShader。普通真机上也只是不启硬件加速，功能无差。
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-gpu-compositing');
-app.commandLine.appendSwitch('use-angle', 'swiftshader');
 
 // ---------- 主窗口 ----------
 // MFILE_HEADLESS=1：窗口不显示（E2E 后台跑，不抢前台焦点）；渲染/DOM 照常工作
@@ -78,15 +75,39 @@ function registerIpc() {
       }
     });
 
+  // ---------- 我的电脑磁盘（D/E/F 盘）：用户目录下固定文件夹，带删除保护 ----------
+  const DRIVE_DIRS = ['D盘', 'E盘', 'F盘'];
+  const drivePaths = () => DRIVE_DIRS.map((n) => path.join(app.getPath('home'), n));
+  // 首次启动确保三个磁盘文件夹存在（存在则跳过）
+  for (const d of drivePaths()) {
+    try { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); } catch {}
+  }
+  // 删除保护：拒绝移入废纸篓/删除/改名/移动磁盘文件夹本体
+  const protectedPaths = () => new Set(drivePaths());
+  const guardDrives = (items = []) => {
+    const hits = items.filter((p) => protectedPaths().has(p));
+    if (hits.length) throw new Error(`「我的电脑」磁盘文件夹受保护，不可删除或移动: ${hits.map((p) => path.basename(p)).join('、')}`);
+  };
+
   h('list_dir', (a) => fsOps.listDir(a.path, a.showHidden));
   h('home_dir', () => app.getPath('home'));
   h('create_dir', (a) => fsOps.createDir(a.path));
   h('create_file', (a) => fsOps.createFile(a.path));
-  h('rename', (a) => fsOps.rename(a.from, a.to));
-  h('move_entries', (a) => fsOps.moveEntries(a.items, a.dest));
+  h('rename', (a) => {
+    if (protectedPaths().has(a.from)) throw new Error('「我的电脑」磁盘文件夹受保护，不可重命名');
+    return fsOps.rename(a.from, a.to);
+  });
+  h('move_entries', (a) => {
+    guardDrives(a.items);
+    return fsOps.moveEntries(a.items, a.dest);
+  });
   h('copy_entries', (a) => fsOps.copyEntries(a.items, a.dest));
-  h('delete_entries', (a) => fsOps.deleteEntries(a.items));
+  h('delete_entries', (a) => {
+    guardDrives(a.items);
+    return fsOps.deleteEntries(a.items);
+  });
   h('trash_entries', async (a) => {
+    guardDrives(a.items);
     // Electron 38 仅单文件 trashItem（复数 trashItems 为更高版本 API）
     for (const p of a.items) await shell.trashItem(p);
   });

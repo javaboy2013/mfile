@@ -39,6 +39,15 @@ export async function refresh() {
 }
 
 export async function openEntry(e) {
+  // .app 是应用包（目录形态）：双击 = 启动应用，不进入其内部文件
+  if (e.is_dir && e.name.endsWith('.app')) {
+    try {
+      await openPath(e.path);
+    } catch (err) {
+      toast(`启动失败: ${JSON.stringify(err)}`, true);
+    }
+    return;
+  }
   if (e.is_dir) {
     loadDir(e.path);
   } else {

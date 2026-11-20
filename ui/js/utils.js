@@ -124,6 +124,10 @@ export const SVG = {
 
   app: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="4" fill="#5c9ce0"/><circle cx="12" cy="12" r="4.5" fill="none" stroke="#fff" stroke-width="1.6"/></svg>',
   disk: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" fill="#8f8f98"/><circle cx="12" cy="12" r="6" fill="#c5c5cc"/><circle cx="12" cy="12" r="1.5" fill="#6e6e78"/></svg>',
+  // 硬盘驱动器图标（D/E/F 盘）：磁盘底座 + 不同颜色区分
+  driveD: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="10" rx="2.5" fill="#4a7ce0"/><circle cx="18" cy="14.5" r="1.3" fill="#8fd48f"/><rect x="6" y="10" width="9" height="1.6" rx="0.8" fill="#fff" opacity="0.9"/><rect x="6" y="13" width="6" height="1.6" rx="0.8" fill="#fff" opacity="0.6"/></svg>',
+  driveE: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="10" rx="2.5" fill="#4cae8f"/><circle cx="18" cy="14.5" r="1.3" fill="#ffd97a"/><rect x="6" y="10" width="9" height="1.6" rx="0.8" fill="#fff" opacity="0.9"/><rect x="6" y="13" width="6" height="1.6" rx="0.8" fill="#fff" opacity="0.6"/></svg>',
+  driveF: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="7" width="18" height="10" rx="2.5" fill="#c99a4b"/><circle cx="18" cy="14.5" r="1.3" fill="#e8735c"/><rect x="6" y="10" width="9" height="1.6" rx="0.8" fill="#fff" opacity="0.9"/><rect x="6" y="13" width="6" height="1.6" rx="0.8" fill="#fff" opacity="0.6"/></svg>',
   home: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1v-9z" fill="#5aa2f0"/></svg>',
   docfolder: '<svg viewBox="0 0 24 24" fill="none"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h4l2 2.5h7A2.5 2.5 0 0 1 21 9v8.5a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11z" fill="#4a7ce0"/><rect x="8" y="10" width="8" height="1.4" fill="#fff"/><rect x="8" y="13" width="8" height="1.4" fill="#fff"/></svg>',
   download: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4v10M8 10l4 4 4-4" stroke="#4cae8f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M4 19h16" stroke="#4cae8f" stroke-width="2" stroke-linecap="round"/></svg>',
@@ -133,6 +137,7 @@ export const SVG = {
   desktop: '<svg viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="13" rx="2" fill="#5aa2f0"/><rect x="4" y="6" width="16" height="9" fill="#a7ccf2"/><path d="M9 20h6M12 17v3" stroke="#8f8f98" stroke-width="2" stroke-linecap="round"/></svg>',
   root: '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" fill="#8f8f98"/><circle cx="12" cy="12" r="6" fill="#c5c5cc"/><circle cx="12" cy="12" r="1.5" fill="#6e6e78"/></svg>',
   trash: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14l-1.2 13a1.5 1.5 0 0 1-1.5 1.35H7.7A1.5 1.5 0 0 1 6.2 20L5 7z" fill="#9aa3ad"/><rect x="4" y="4" width="16" height="2.5" rx="1.25" fill="#7c8794"/><rect x="9" y="2" width="6" height="3" rx="1" fill="#7c8794"/><path d="M10 10.5v7M14 10.5v7" stroke="#e8eaee" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  user: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#5aa2f0"/><circle cx="12" cy="9.5" r="3.2" fill="#fff"/><path d="M5.5 18.5a7 7 0 0 1 13 0A9.9 9.9 0 0 1 12 21a9.9 9.9 0 0 1-6.5-2.5z" fill="#fff"/></svg>',
 };
 
 export function iconFor(e) {

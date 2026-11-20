@@ -9,7 +9,9 @@ const { execFile } = require('child_process');
 const { detectArchive } = require('./archive');
 
 /** 应用真实图标：app.getFileIcon(path) → dataURL，带进程级缓存。
- *  供渲染层 .app 条目用 <img> 展示真实图标（size 32 足够列表 + 2x retina）。 */
+ *  供渲染层 .app 条目用 <img> 展示真实图标（size 32 足够列表 + 2x retina）。
+ *  已知 Electron getFileIcon 对个别 icns（如哔哩哔哩）解析出全透明图——
+ *  检测到透明图时回退：用 sips 直接从 app 的 icns 转 PNG，稳定可靠。 */
 const iconCache = new Map();
 async function appIcon(p, size = 32) {
   const key = `${p}|${size}`;
@@ -17,9 +19,50 @@ async function appIcon(p, size = 32) {
   // 延迟 require：本文件被单测直接加载（无 electron 环境）
   const { app } = require('electron');
   const icon = await app.getFileIcon(p, { size });
-  const url = icon.toDataURL();
+  let url = icon.toDataURL();
+  if (await isBlankPng(icon.toPNG())) url = (await icnsFallback(p, size)) || url;
   iconCache.set(key, url);
   return url;
+}
+
+/** 粗判全透明 PNG：解压 IDAT 后抽样 alpha 通道，最大值 < 32 视为空白 */
+async function isBlankPng(buf) {
+  try {
+    const zlib = require('zlib');
+    let i = 8;
+    const idat = [];
+    while (i + 8 <= buf.length) {
+      const ln = buf.readUInt32BE(i);
+      if (buf.slice(i + 4, i + 8).toString('ascii') === 'IDAT') idat.push(buf.slice(i + 8, i + 8 + ln));
+      i += 12 + ln;
+    }
+    const raw = zlib.inflateSync(Buffer.concat(idat));
+    const w = buf.readUInt32BE(16);
+    const stride = w * 4 + 1; // RGBA + 行 filter 字节
+    let maxA = 0;
+    for (let row = 0; row < raw.length / stride; row += 4) {
+      const line = raw.slice(row * stride + 1, (row + 1) * stride);
+      for (let px = 0; px < w; px += 8) maxA = Math.max(maxA, line[px * 4 + 3] || 0);
+    }
+    return maxA < 32;
+  } catch { return false; }
+}
+
+/** 回退：读 app 的 CFBundleIconFile 指向的 icns，sips 转 PNG → dataURL */
+async function icnsFallback(p, size) {
+  try {
+    const { execFile } = require('child_process');
+    const { promisify } = require('util');
+    const exec = promisify(execFile);
+    const { stdout } = await exec('/usr/libexec/PlistBuddy', ['-c', 'Print :CFBundleIconFile', path.join(p, 'Contents/Info.plist')]);
+    const name = stdout.trim();
+    const icnsPath = path.join(p, 'Contents/Resources', name.endsWith('.icns') ? name : `${name}.icns`);
+    const tmp = `/tmp/mfile-icon-${process.pid}-${Math.random().toString(36).slice(2)}.png`;
+    await exec('/usr/bin/sips', ['-s', 'format', 'png', '-Z', String(size * 2), icnsPath, '--out', tmp]);
+    const buf = await fsp.readFile(tmp);
+    fsp.unlink(tmp).catch(() => {});
+    return `data:image/png;base64,${buf.toString('base64')}`;
+  } catch { return null; }
 }
 
 

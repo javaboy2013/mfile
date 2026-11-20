@@ -5,15 +5,28 @@ import { state } from './state.js';
 import { $, esc, fmtSize, fmtDate, iconFor, SVG } from './utils.js';
 import { appIcon } from './commands.js';
 
-// 应用真实图标异步补挂：占位 SVG 先渲染，dataURL 回来后替换 .ico 内容
-const iconPainted = new Set();
+// 应用真实图标异步补挂：占位 SVG 先渲染，dataURL 回来后替换 .ico 内容。
+// 注意：不能按路径做「已画」标记——重渲染会重建 DOM 行，标记会导致新行
+// 永远停在占位 SVG（实测竞态 bug）。改为每次渲染都补挂：主进程有缓存，
+// 重复调用是微秒级 IPC，成本可忽略。
 function paintRealIcon(row, e) {
-  if (iconPainted.has(e.path)) return;
-  iconPainted.add(e.path);
   appIcon(e.path).then((url) => {
     const ico = row?.querySelector('.ico');
     if (ico) ico.innerHTML = `<img src="${url}" alt="" draggable="false">`;
-  }).catch(() => {});
+    const img = ico?.querySelector('img');
+    const r = img?.getBoundingClientRect();
+    const cs = img ? getComputedStyle(img) : null;
+    diag(`then ${e.name} img=${!!img} loaded=${img?.complete && img.naturalWidth > 0} nat=${img?.naturalWidth} rect=${Math.round(r?.width ?? -1)}x${Math.round(r?.height ?? -1)} disp=${cs?.display} vis=${cs?.visibility}`);
+  }).catch((err) => diag(`catch ${e.name} ${String(err).slice(0, 50)}`));
+}
+// [icon-diag] 渲染层诊断写 localStorage（正式版移除）。启动时清空防历史污染。
+try { localStorage.removeItem('mfile_icon_diag'); } catch {}
+function diag(msg) {
+  try {
+    window.__mfileDiag = window.__mfileDiag || [];
+    window.__mfileDiag.push(msg);
+    localStorage.setItem('mfile_icon_diag', JSON.stringify(window.__mfileDiag.slice(-200)));
+  } catch {}
 }
 
 /** 过滤 + 排序后的可见条目（目录置顶） */
@@ -92,6 +105,7 @@ export const SIDEBAR = [
   { icon: SVG.desktop, label: '桌面', get path() { return `${state.home || ''}/Desktop`; } },
   { icon: SVG.root, label: '根目录', path: '/' },
   { icon: SVG.trash, label: '废纸篓', get path() { return `${state.home || ''}/.Trash`; } },
+  { icon: SVG.user, label: '用户', path: '/Users' },
 ];
 
 // 点击行为由 events.js 对 sidebar 容器统一委托（data-idx → SIDEBAR）
@@ -104,6 +118,24 @@ export function renderSidebar() {
     el.className = 'side-item' + (state.cwd === item.path ? ' active' : '');
     el.dataset.idx = idx;
     el.innerHTML = `<span class="ico">${item.icon}</span><span>${esc(item.label)}</span>`;
+    s.appendChild(el);
+  });
+  // 我的电脑分区：D/E/F 盘（用户目录下固定文件夹，主进程启动时确保存在）
+  const drives = [
+    { label: 'D 盘', name: 'D盘', icon: SVG.driveD },
+    { label: 'E 盘', name: 'E盘', icon: SVG.driveE },
+    { label: 'F 盘', name: 'F盘', icon: SVG.driveF },
+  ];
+  const myPc = document.createElement('div');
+  myPc.className = 'side-title';
+  myPc.textContent = '我的电脑';
+  s.appendChild(myPc);
+  drives.forEach((d) => {
+    const p = `${state.home || ''}/${d.name}`;
+    const el = document.createElement('div');
+    el.className = 'side-item' + (state.cwd === p ? ' active' : '');
+    el.dataset.drive = d.name;
+    el.innerHTML = `<span class="ico">${d.icon}</span><span>${esc(d.label)}</span>`;
     s.appendChild(el);
   });
 }
