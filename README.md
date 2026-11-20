@@ -114,6 +114,8 @@ npm run dist        # electron-builder 打 dmg + zip（dist/）
 
 ### 自测体系（分层）
 
+> 完整的开发/测试/踩坑经验见 [docs/开发测试经验.md](docs/开发测试经验.md)——架构决策、Electron/Playwright 踩坑、测试体系设计与实证。
+
 | 层 | 命令 | 覆盖 | 速度 |
 |---|---|---|---|
 | **单元**（`electron/test/`） | `npm test` | fs-ops/archive 纯逻辑：zip/tar.gz 往返、同名冲突、路径穿越、复制移动语义、压缩类型识别矩阵 | <1s |
