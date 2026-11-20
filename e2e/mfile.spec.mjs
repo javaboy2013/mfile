@@ -30,17 +30,12 @@ test('双击进入目录、上一级返回', async ({ win, fixtureDir }) => {
   await expect(win.locator('#statusText')).toHaveText(fixtureDir);
 });
 
-test('⌘L 路径跳转（面包屑已默认隐藏）', async ({ win, fixtureDir }) => {
-  // 面包屑默认隐藏
-  await expect(win.locator('#crumbs')).toBeHidden();
-  // ⌘L 唤出路径输入框
+test('⌘L 路径跳转', async ({ win, fixtureDir }) => {
   await win.keyboard.press('Meta+l');
   await expect(win.locator('#pathInput')).toBeVisible();
   await win.fill('#pathInput', `${fixtureDir}/docs`);
   await win.keyboard.press('Enter');
   await expect(win.locator('#statusText')).toHaveText(`${fixtureDir}/docs`);
-  // 跳转后输入框退出、面包屑回到隐藏
-  await expect(win.locator('#crumbs')).toBeHidden();
 });
 
 // ---------- 多格式解压（二级菜单：压缩 ▸） ----------

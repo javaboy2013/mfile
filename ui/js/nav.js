@@ -80,32 +80,25 @@ export function selectRow(ev, e) {
   renderStatus();
 }
 
-// ⌘L 路径跳转：临时唤出路径输入框（面包屑默认隐藏）
+// 点击面包屑空白处 / ⌘L 进入路径编辑模式（访达同款）
 export function showPathInput() {
   const c = $('crumbs');
-  c.classList.add('path-editing');
-  c.style.display = 'flex'; // 唤出
   c.innerHTML = '';
-  const exitEdit = () => {
-    c.classList.remove('path-editing');
-    c.style.display = 'none';
-    c.innerHTML = '';
-  };
   const input = document.createElement('input');
   input.id = 'pathInput';
   input.value = state.cwd || '';
-  input.placeholder = '输入路径后按回车（Esc 取消）';
+  input.placeholder = '输入路径后按回车';
   input.onkeydown = (ev) => {
     if (ev.key === 'Enter') {
       const target = input.value.trim();
       if (target) loadDir(target);
-      exitEdit();
+      else renderCrumbs();
     } else if (ev.key === 'Escape') {
-      exitEdit();
+      renderCrumbs();
     }
     ev.stopPropagation();
   };
-  input.onblur = () => exitEdit();
+  input.onblur = () => renderCrumbs();
   c.appendChild(input);
   input.focus();
   input.select();

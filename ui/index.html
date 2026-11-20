@@ -538,6 +538,9 @@
   }
 
   /* 状态栏 */
+  /* 排序下拉右侧的当前路径文本不展示（textContent 仍维护供测试断言） */
+  .status-text { display: none; }
+
   .statusbar {
     display: flex;
     align-items: center;
@@ -646,9 +649,6 @@
 
   /* 路径编辑输入框 */
   #crumbs { cursor: text; }
-  /* 面包屑路径栏默认隐藏（当前路径见底部状态栏）；⌘L 路径跳转时临时唤出 */
-  #crumbs { display: none; }
-  #crumbs.path-editing { display: flex; }
   #pathInput {
     flex: 1;
     background: var(--panel-2);

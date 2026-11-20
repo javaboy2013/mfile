@@ -40,8 +40,6 @@ export function render() {
 export function renderCrumbs() {
   const c = $('crumbs');
   c.innerHTML = '';
-  // 面包屑默认隐藏（CSS display:none），编辑态由 showPathInput 唤出
-  if (!c.classList.contains('path-editing')) return;
   if (!state.cwd) return;
   const parts = state.cwd.split('/').filter(Boolean);
   let acc = '';
