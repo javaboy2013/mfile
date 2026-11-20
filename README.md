@@ -105,10 +105,27 @@ main.js:  new BrowserWindow({ show:false, backgroundColor: 主题底色 })
 
 ```bash
 npm install
-npm start     # electron .（前端 file:// 直载，改前端需重启）
-npm test      # node --test 单测
-npm run dist  # electron-builder 打 dmg + zip（dist/）
+npm start           # electron .（前端 file:// 直载，改前端需重启）
+npm test            # 单元测试（node --test，毫秒级，IPC 实现层）
+npm run test:e2e    # E2E（Playwright 驱动真实 app，后台无窗口弹跳）
+npm run test:all    # 单测 + E2E 全量
+npm run dist        # electron-builder 打 dmg + zip（dist/）
 ```
+
+### 自测体系（分层）
+
+| 层 | 命令 | 覆盖 | 速度 |
+|---|---|---|---|
+| **单元**（`electron/test/`） | `npm test` | fs-ops/archive 纯逻辑：zip/tar.gz 往返、同名冲突、路径穿越、复制移动语义、压缩类型识别矩阵 | <1s |
+| **E2E**（`e2e/`，Playwright for Electron） | `npm run test:e2e` | 真实 app 全链路（preload→IPC→实现→渲染）：启动首屏、导航/面包屑、右键多格式解压（含冲突）、压缩、废纸篓确认、即时过滤、目录置顶、主题持久化 | ~1.5min |
+
+E2E 要点：
+- **每个用例独立临时目录**（`e2e/helpers.mjs` 的 `makeFixture` 预置 tar.gz/gz/zip/普通文件），用完即清，互不干扰
+- **`MFILE_HEADLESS=1` 后台运行**：窗口创建但不 `show()`（渲染/DOM 照常工作），不抢前台焦点，可边跑边干活；3 并行
+- 断言**程序化**（DOM 状态 + 文件系统结果双重断言），替代人工截图肉眼判断
+- **已经抓到过 2 个真 bug**：`shell.trashItems` API 版本不符（Electron 38 只有单数 `trashItem`）、即时过滤从未把输入写进 `state.filter`（功能自始就是坏的）——这类问题肉眼回归很难发现
+
+新功能自测建议：先写单测覆盖主进程逻辑 → E2E 固化一条用户旅程（右键菜单存在 + 执行 + 文件系统断言 + toast 断言）→ 提交前 `npm run test:all`。
 
 - Electron 二进制下载慢时：`ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/ npm install`
 - 构建产物：`dist/mac-arm64/mfile.app`、`dist/mfile-0.2.0-arm64.dmg`

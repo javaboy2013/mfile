@@ -7,9 +7,12 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test electron/test/*.test.js",
+    "test:e2e": "playwright test",
+    "test:all": "npm test && npm run test:e2e",
     "dist": "electron-builder --mac"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "electron": "^38.2.0",
     "electron-builder": "^26.0.12"
   },

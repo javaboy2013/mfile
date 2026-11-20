@@ -23,6 +23,9 @@ function readThemeDark() {
 }
 
 // ---------- 主窗口 ----------
+// MFILE_HEADLESS=1：窗口不显示（E2E 后台跑，不抢前台焦点）；渲染/DOM 照常工作
+const HEADLESS = !!process.env.MFILE_HEADLESS;
+
 function createWindow() {
   const dark = readThemeDark();
   const win = new BrowserWindow({
@@ -42,7 +45,9 @@ function createWindow() {
     },
   });
 
-  win.on('ready-to-show', () => win.show());
+  win.on('ready-to-show', () => {
+    if (!HEADLESS) win.show();
+  });
   // 外部链接走系统浏览器
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -72,7 +77,10 @@ function registerIpc() {
   h('move_entries', (a) => fsOps.moveEntries(a.items, a.dest));
   h('copy_entries', (a) => fsOps.copyEntries(a.items, a.dest));
   h('delete_entries', (a) => fsOps.deleteEntries(a.items));
-  h('trash_entries', (a) => shell.trashItems(a.items));
+  h('trash_entries', async (a) => {
+    // Electron 38 仅单文件 trashItem（复数 trashItems 为更高版本 API）
+    for (const p of a.items) await shell.trashItem(p);
+  });
   h('trash_dir', () => trashDir());
   h('empty_trash', () => emptyTrash());
   h('zip_entries', (a) => zipEntries(a.items, a.destZip));

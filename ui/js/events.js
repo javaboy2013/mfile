@@ -63,7 +63,8 @@ export function bindEvents() {
   };
 
   // ---------- 过滤 / 标签 ----------
-  $('filterInput').oninput = () => {
+  $('filterInput').oninput = (ev) => {
+    state.filter = ev.target.value; // 即时过滤（输入即生效）
     applyTagsFromInput();
     renderList();
     renderStatus();
