@@ -46,8 +46,6 @@ export function bindThemeMenu() {
     menu.style.left = (r.right - menu.offsetWidth) + 'px';
     menu.style.top = (r.bottom + 4) + 'px';
     menu.querySelectorAll('.ctx-item').forEach((el) => {
-      el.onmouseenter = () => (el.style.background = 'var(--hover)');
-      el.onmouseleave = () => (el.style.background = 'none');
       el.onclick = () => {
         applyTheme(el.dataset.t);
         menu.style.display = 'none';

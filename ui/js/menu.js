@@ -93,11 +93,15 @@ function renderMenu(ev, items) {
   });
 }
 
+// 右侧小箭头（SVG，避免字体字符渲染差异）
+const ARROW_SVG =
+  '<svg width="9" height="9" viewBox="0 0 10 10"><path d="M3 1.5L7.5 5 3 8.5z" fill="currentColor"/></svg>';
+
 function itemHtml(it) {
   if (it.sep) return '<div class="ctx-sep"></div>';
   const cls = 'ctx-item' + (it.danger ? ' danger' : '') + (it.sub ? ' has-sub' : '');
   const right = it.sub
-    ? '<span class="ctx-arrow">▶</span>'
+    ? `<span class="ctx-arrow">${ARROW_SVG}</span>`
     : it.hint
       ? `<span class="ctx-hint">${it.hint}</span>`
       : '';
@@ -106,12 +110,11 @@ function itemHtml(it) {
   }</div>`;
 }
 
+// hover 高亮由 CSS :hover 接管（含 danger 淡红底），此处只绑点击
 function bindItemEvents(container, items) {
   if (!container) return;
   container.querySelectorAll(':scope > .ctx-item').forEach((el) => {
     const it = items.find((x) => x.label === el.dataset.label && !x.sep);
-    el.onmouseenter = () => (el.style.background = 'var(--hover)');
-    el.onmouseleave = () => (el.style.background = 'none');
     el.onclick = () => {
       if (!it || it.sub) return; // 分组父项不响应点击
       $('ctxMenu').style.display = 'none';

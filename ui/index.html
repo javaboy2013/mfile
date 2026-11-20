@@ -299,35 +299,75 @@
   .toolbar-actions { display: flex; gap: 6px; -webkit-app-region: no-drag; }
 
   /* ---- 右键菜单（分组 + 二级子菜单）---- */
+  #ctxMenu {
+    position: fixed;
+    z-index: 9999;
+    min-width: 168px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 5px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .25), 0 12px 32px rgba(0, 0, 0, .35);
+  }
   .ctx-item {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 5px 14px;
+    gap: 18px;
+    margin: 1px 6px;
+    padding: 6px 10px;
+    border-radius: 5px;
     font-size: 12px;
     cursor: pointer;
     white-space: nowrap;
   }
+  .ctx-item:hover { background: var(--hover); }
   .ctx-item.danger { color: var(--danger); }
-  .ctx-item .ctx-hint { margin-left: auto; color: var(--text-dim); font-size: 11px; }
-  .ctx-item .ctx-arrow { margin-left: auto; color: var(--text-dim); font-size: 10px; }
-  .ctx-sep { height: 1px; margin: 4px 8px; background: var(--border); }
-  /* 二级子菜单：hover 父项时在右侧展开；父菜单贴右缘时翻转到左侧 */
+  .ctx-item.danger:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); }
+  .ctx-item .ctx-hint {
+    margin-left: auto;
+    color: var(--text-dim);
+    font-size: 10px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    opacity: .85;
+  }
+  .ctx-item .ctx-arrow {
+    margin-left: auto;
+    color: var(--text-dim);
+    display: inline-flex;
+    align-items: center;
+  }
+  .ctx-item .ctx-arrow svg { display: block; }
+  .ctx-sep { height: 1px; margin: 5px 12px; background: var(--border); opacity: .7; }
+  /* 二级子菜单：hover 父项时在右侧滑入；父菜单贴右缘时翻转到左侧 */
   .ctx-sub {
     display: none;
     position: absolute;
-    left: 100%;
-    top: -5px;
-    min-width: 150px;
+    left: calc(100% + 3px);
+    top: -6px;
+    min-width: 156px;
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 0;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, .4);
+    border-radius: 8px;
+    padding: 5px 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .25), 0 12px 32px rgba(0, 0, 0, .35);
+    opacity: 0;
+    transform: translateX(-4px);
   }
-  .ctx-item.flip-sub > .ctx-sub { left: auto; right: 100%; }
-  .ctx-item.has-sub:hover > .ctx-sub { display: block; }
+  .ctx-item.has-sub:hover > .ctx-sub {
+    display: block;
+    animation: ctx-sub-in .14s ease-out forwards;
+  }
+  @keyframes ctx-sub-in {
+    from { opacity: 0; transform: translateX(-4px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .ctx-item.flip-sub > .ctx-sub { left: auto; right: calc(100% + 3px); transform: translateX(4px); }
+  .ctx-item.flip-sub:hover > .ctx-sub { animation-name: ctx-sub-in-flip; }
+  @keyframes ctx-sub-in-flip {
+    from { opacity: 0; transform: translateX(4px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
   .tb-btn {
     height: 28px;
     padding: 0 10px;
@@ -711,7 +751,7 @@
       <button class="tb-btn" id="btnUpdate" title="检查应用更新">⟳</button>
     </div>
   </div>
-  <div id="ctxMenu" style="display:none;position:fixed;z-index:9999;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 0;min-width:140px;box-shadow:0 4px 16px rgba(0,0,0,.4)"></div>
+  <div id="ctxMenu" style="display:none"></div>
 
   <div class="main">
     <div class="sidebar" id="sidebar"></div>
