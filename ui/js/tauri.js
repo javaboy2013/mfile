@@ -9,3 +9,5 @@ const invoke = async (cmd, args) => {
 };
 
 export { invoke };
+// preload 暴露的更新事件订阅（updater.js 用）
+export const onUpdaterEvent = (channel, cb) => window.mfile.onUpdaterEvent(channel, cb);

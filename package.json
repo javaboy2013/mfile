@@ -1,6 +1,6 @@
 {
   "name": "mfile",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "mfile — macOS 文件管理器（Electron）",
   "main": "electron/main.js",
