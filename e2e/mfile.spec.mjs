@@ -75,18 +75,72 @@ test('右键解压 gz：单文件流式解压去后缀', async ({ win, fixtureDi
   expect(fs.readFileSync(path.join(fixtureDir, 'note.txt'), 'utf8')).toBe('gz-content');
 });
 
-test('解压同名冲突：报错且不覆盖', async ({ win, fixtureDir }) => {
-  // 预制造冲突：先解压 note.txt.gz 成功，再解压一次
+test('解压冲突：重命名解压（x → x 2），原文件不动', async ({ win, fixtureDir }) => {
   const row = win.locator('.row', { hasText: 'note.txt.gz' });
   await row.click({ button: 'right' });
   await openSubmenu(win, '压缩');
   await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
   await expect(win.locator('#toast')).toContainText('解压完成');
+  // 修改现有文件内容以区分「磁盘现状」与「包内快照」
+  fs.writeFileSync(path.join(fixtureDir, 'note.txt'), 'DISK-CHANGED');
+  // 再解压一次 → 冲突弹窗
   await row.click({ button: 'right' });
   await openSubmenu(win, '压缩');
   await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
-  await expect(win.locator('#toast')).toContainText('目标已存在');
-  expect(fs.readFileSync(path.join(fixtureDir, 'note.txt'), 'utf8')).toBe('gz-content');
+  await expect(win.locator('.modal h3')).toHaveText('解压目标已存在');
+  await win.locator('#modalRename').click();
+  await expect(win.locator('#toast')).toContainText('note.txt → note 2.txt');
+  expect(fs.readFileSync(path.join(fixtureDir, 'note.txt'), 'utf8')).toBe('DISK-CHANGED', '原文件不动');
+  expect(fs.readFileSync(path.join(fixtureDir, 'note 2.txt'), 'utf8')).toBe('gz-content', '包内容到新名');
+});
+
+test('解压冲突：覆盖解压，包内容替换现有文件', async ({ win, fixtureDir }) => {
+  const row = win.locator('.row', { hasText: 'note.txt.gz' });
+  await row.click({ button: 'right' });
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
+  await expect(win.locator('#toast')).toContainText('解压完成');
+  fs.writeFileSync(path.join(fixtureDir, 'note.txt'), 'DISK-CHANGED');
+  await row.click({ button: 'right' });
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
+  await win.locator('#modalOverwrite').click();
+  await expect(win.locator('#toast')).toContainText('解压完成');
+  expect(fs.readFileSync(path.join(fixtureDir, 'note.txt'), 'utf8')).toBe('gz-content', '被包内容覆盖');
+});
+
+test('解压冲突：取消则什么都不做', async ({ win, fixtureDir }) => {
+  const row = win.locator('.row', { hasText: 'note.txt.gz' });
+  await row.click({ button: 'right' });
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
+  await expect(win.locator('#toast')).toContainText('解压完成');
+  fs.writeFileSync(path.join(fixtureDir, 'note.txt'), 'DISK-CHANGED');
+  await row.click({ button: 'right' });
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
+  await win.locator('#modalCancel').click();
+  expect(fs.readFileSync(path.join(fixtureDir, 'note.txt'), 'utf8')).toBe('DISK-CHANGED', '取消无副作用');
+  expect(fs.existsSync(path.join(fixtureDir, 'note 2.txt'))).toBe(false);
+});
+
+test('tar.gz 冲突重命名：目录按「名称 2」规则', async ({ win, fixtureDir }) => {
+  const row = win.locator('.row', { hasText: 'bundle.tar.gz' });
+  // 第一次：正常解出 payload/
+  await row.click({ button: 'right' });
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
+  await expect(win.locator('#toast')).toContainText('解压完成');
+  // 第二次：冲突弹窗 → 重命名
+  await row.click({ button: 'right' });
+  await openSubmenu(win, '压缩');
+  await win.locator('.ctx-sub .ctx-item', { hasText: '解压到当前目录' }).click();
+  await expect(win.locator('.modal h3')).toHaveText('解压目标已存在');
+  await win.locator('#modalRename').click();
+  await expect(win.locator('#toast')).toContainText('payload → payload 2');
+  await expect
+    .poll(() => fs.existsSync(path.join(fixtureDir, 'payload 2/inner.txt')))
+    .toBe(true);
 });
 
 test('右键解压 zip', async ({ win, fixtureDir }) => {

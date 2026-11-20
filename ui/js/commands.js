@@ -23,9 +23,10 @@ export const emptyTrash = () => invoke('empty_trash');
 
 export const zipEntries = (items, destZip) => invoke('zip_entries', { items, destZip });
 
-/** 解压压缩文件（zip/tar/gz/tgz/bz2/xz/7z/rar，主进程按类型分发） */
-export const extractHere = (archivePath, destDir) =>
-  invoke('extract_here', { archivePath, destDir });
+/** 解压压缩文件（zip/tar/gz/tgz/bz2/xz/7z/rar，主进程按类型分发）。
+ * mode：'check' 探测（冲突返回 {conflict}）| 'rename' 冲突项改名（x → x 2）| 'overwrite' 覆盖 */
+export const extractHere = (archivePath, destDir, mode = 'check') =>
+  invoke('extract_here', { archivePath, destDir, mode });
 
 /** 递归计算目录大小（字节） */
 export const dirSize = (path) => invoke('dir_size', { path });

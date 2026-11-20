@@ -84,7 +84,7 @@ function registerIpc() {
   h('trash_dir', () => trashDir());
   h('empty_trash', () => emptyTrash());
   h('zip_entries', (a) => zipEntries(a.items, a.destZip));
-  h('extract_here', (a) => extractHere(a.archivePath, a.destDir));
+  h('extract_here', (a) => extractHere(a.archivePath, a.destDir, a.mode || 'check'));
   h('dir_size', (a) => fsOps.dirSize(a.path));
   h('search_files', (a) => fsOps.searchFiles(a.root, a.query, a.maxResults));
   h('open_path', (a) => fsOps.openPath(a.path));

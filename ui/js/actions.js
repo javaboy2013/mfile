@@ -148,15 +148,55 @@ export async function zipSelected() {
   }
 }
 
-/** 解压压缩文件到当前目录（zip/tar/gz/tgz/bz2/xz/7z/rar） */
+/** 解压压缩文件到当前目录（zip/tar/gz/tgz/bz2/xz/7z/rar）。
+ * 目标同名冲突时弹窗三选一：取消 / 重命名解压（x → x 2）/ 覆盖 */
 export async function extractToHere(archivePath) {
   try {
-    await extractHere(archivePath, state.cwd);
+    let res = await extractHere(archivePath, state.cwd);
+    if (res && res.conflict) {
+      const choice = await showExtractConflict(res.conflict);
+      if (!choice) return; // 取消
+      res = await extractHere(archivePath, state.cwd, choice);
+    }
     await refresh();
-    toast('解压完成');
+    if (res && res.renamed && Object.keys(res.renamed).length) {
+      const pairs = Object.entries(res.renamed).slice(0, 3).map(([a, b]) => `${a} → ${b}`);
+      toast(`解压完成（${pairs.join('、')}${Object.keys(res.renamed).length > 3 ? ' 等' : ''}）`);
+    } else {
+      toast('解压完成');
+    }
   } catch (e) {
     toast(String(e), true);
   }
+}
+
+/** 冲突三选一弹窗：resolve 'rename' | 'overwrite' | null（取消） */
+export function showExtractConflict(conflicts) {
+  const shown = conflicts.slice(0, 5).map(esc).join('、');
+  const more = conflicts.length > 5 ? ` 等 ${conflicts.length} 项` : '';
+  const root = $('modalRoot');
+  root.innerHTML = `
+    <div class="modal-mask">
+      <div class="modal">
+        <h3>解压目标已存在</h3>
+        <div style="color:var(--text-dim);font-size:12px;margin-bottom:8px">当前目录已有同名项：<b style="color:var(--text)">${shown}${more}</b></div>
+        <div style="color:var(--text-dim);font-size:11px;margin-bottom:14px">重命名解压：保留现有文件，新内容按「名称 2」规则命名<br>覆盖：用压缩包内容替换现有同名文件（目录内容合并）</div>
+        <div class="btns">
+          <button class="btn" id="modalCancel">取消</button>
+          <button class="btn" id="modalRename">重命名解压</button>
+          <button class="btn danger" id="modalOverwrite">覆盖</button>
+        </div>
+      </div>
+    </div>`;
+  const close = () => (root.innerHTML = '');
+  return new Promise((resolve) => {
+    $('modalCancel').onclick = () => { close(); resolve(null); };
+    $('modalRename').onclick = () => { close(); resolve('rename'); };
+    $('modalOverwrite').onclick = () => { close(); resolve('overwrite'); };
+    root.querySelector('.modal-mask').onkeydown = (ev) => {
+      if (ev.key === 'Escape') { close(); resolve(null); }
+    };
+  });
 }
 
 // ---------- 废纸篓 ----------
